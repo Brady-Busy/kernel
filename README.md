@@ -1,11 +1,18 @@
-# Starter Kernel
-This is the starter kernel code for the spring 2022 offering of CSC 395: Advanced Operating Systems at Grinnell College. This project includes the basic elements required to build and run a simple kernel on an x86_64 machine emulated with QEMU.
+# Basic Kernel Implementation
+This is a project for Grinnell College CSC-395 2022S with professor Charlie Curtsinger. Starter code for setting up bootloader was provided.
+
+## Functionality
+We will list functionalities of our basic kernel below:
+* Printing Functions
+* **Still in progress**
 
 ## Acknowledgements
-This starter code is based on the following example projects:
+The starter code is provided by professor Charlie Curtsinger, references for starter code is listed below.
+
+The starter code is based on the following example projects:
 - [OSDev.org Bare Bones Kernel](https://wiki.osdev.org/Bare_bones)
 - [Stivale2 Barebones Kernel](https://github.com/stivale/stivale2-barebones)
 
-In addition to the above example projects, the following references were used when setting up this code:
+In addition to the above example projects, the following references were used when setting up starter code:
 - [OSDev.org GCC Cross Compiler Instructions](https://wiki.osdev.org/GCC_Cross-Compiler)
 - [Stivale2 Reference](https://github.com/stivale/stivale/blob/master/STIVALE2.md)
