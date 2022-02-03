@@ -57,9 +57,9 @@ void* find_tag(struct stivale2_struct* hdr, uint64_t id) {
 
   // No matching tag found
 	return NULL;
-}
+}// Find a tag with a given IDL;
 
-typedef void (*term_write_t)(const char*, size_t);
+typedef void (*term_write_t) (const char*, size_t);
 term_write_t term_write = NULL;
 
 void term_setup(struct stivale2_struct* hdr) {
@@ -178,11 +178,43 @@ void kprintf(const char* format, ...){
         default:
           kprint_s("???");
       }
+      pos++;
     }
-    pos++;
+    else {
+      kprint_c(*pos);
+      pos++;
+    }
   }
 
   va_end (args);
+}
+
+void usable_mem (struct stivale2_struct* hdr) {
+  uint64_t virtual_base;
+  struct stivale2_mmap_entry* physical_entries;
+
+  struct stivale2_struct_tag_hhdm* virtual_tag = (struct stivale2_struct_tag_hhdm*) find_tag(hdr, STIVALE2_STRUCT_TAG_HHDM_ID);
+  virtual_base = virtual_tag -> addr;
+
+  struct stivale2_struct_tag_memmap* physical_tag = (struct stivale2_struct_tag_memmap*) find_tag(hdr, STIVALE2_STRUCT_TAG_MEMMAP_ID);
+  uint64_t num_entries = physical_tag -> entries;
+  physical_entries = physical_tag -> memmap;
+
+  kprint_s("Usable Memory: \n");
+
+  // iterating through physical_entries, we trust physical_tag to give us correct number of entries
+  for (int i = 0; i < num_entries; i++) {
+
+    struct stivale2_mmap_entry current = physical_entries[i];
+
+    // if the memory is not usable, skip
+    if (current.type != 1) continue;
+
+    uint64_t base = current.base;
+    uint64_t end = base + current.length;
+
+    kprintf("  0x%x-0x%x mapped at 0x%x-0x%x\n", base, end, virtual_base + base, virtual_base + end);
+  }
 }
 
 void _start(struct stivale2_struct* hdr) {
@@ -191,8 +223,10 @@ void _start(struct stivale2_struct* hdr) {
 
   // Print a greeting
   term_write("Hello Kernel!\n", 14);
-  int a =10;
-  kprintf("%% %d %p",12,&a);
+  //int a =10;
+  //kprintf("%% %d %p",12,&a);
+
+  usable_mem(hdr);
 
 	// We're done, just hang...
 	halt();
