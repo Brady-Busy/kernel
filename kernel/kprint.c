@@ -128,3 +128,11 @@ void kprintf(const char* format, ...){
 
   va_end (args);
 }
+
+void kmemset (void* address, int value, size_t n) {
+  char* cursor = (char*) address;
+  for (int i = 0; i < n; i++) {
+    *cursor = value;
+    cursor++;
+  }
+}
