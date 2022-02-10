@@ -4,26 +4,37 @@
 
 // Create a non-shift dictionary
 char lower[216];
+char upper[216];
 
-char * dict = "1234567890-=\0\0qwertyuiop[]\n\0asdfghjkl;'`\0\\zxcvbnm,./\0*\0 \0
-\0\0\0\0\0\0\0\0\0\0\0\0";
+char * dict = "1234567890"
+              "-=\0\0qwerty"
+              "uiop[]\n\0as"
+              "dfghjkl;'`"
+              "\0\\zxcvbnm,"
+              "./\0*\0 \0\0\0\0"
+              "\0\0\0\0\0\0\0\0\0";
+char * shift_dict = "!@#$%^&*()_+\0\0QWERTYUIOP{}\n\0ASDFGHJKL:\"~\0|ZX"
+"CVBNM<>?\0*\0 \0\0\0\0\0\0\0\0\0\0\0\0\0";
+
+char key_buffer[128];
+int reader = 0;
+int writer = 0;
+volatile size_t length = 0;
+
+int shift_pressed = 0;
+
 // Initialize all of the press
 // Scan code as access
 void init_scan_dict() {
-  // Initialize lower dictionary
-  lower[1] = '\0';
-  
   // Set base elements
+  lower[1] = '\0';
+  upper[1] = '\0';
 
-  for (int i = 2; i < (3 * 16) + 7; i++) {
+  for (int i = 2; i < (5 * 16) + 6; i++) {
       lower[i] = dict[i-2];
+      upper[i] = shift_dict[i-2];
   }
-
 }
-
-
-
-
 
 typedef struct interrupt_context {
   uintptr_t ip;
@@ -41,8 +52,49 @@ void std_handler(interrupt_context_t* ctx) {
 
 __attribute__((interrupt))
 void irq1_handler(interrupt_context_t* ctx) {
-  kprintf("%c", lower[inb(0x60)]);
+
+  int code = inb(0x60);
+
+  if (code == 42 || code == 54) {
+    shift_pressed++;
+  } else if (code == 170 || code == 182) {
+    shift_pressed--;
+  }
+
+  if (shift_pressed) {
+    if (upper[code] && length < 128){
+        key_buffer[length++, writer++] = upper[code];
+        writer %= 128;
+    }
+  } else {
+    if (lower[code] && length < 128){
+        key_buffer[length++, writer++] = lower[code];
+        writer %= 128;
+    }
+  }
   outb(PIC1_COMMAND, PIC_EOI);
+}
+
+char kgetc () {
+  reader %= 128;
+  while (!length);
+  return length--, key_buffer[reader++];
+}
+
+size_t kgets (char* output, size_t capacity) {
+  size_t chars_read = 0;
+  while (chars_read < capacity - 1) {
+    char current = kgetc();
+    if (current == '\n') {
+      output[chars_read] = '\0';
+      return chars_read;
+    }
+    else {
+      output[chars_read++] = current; 
+    }
+  }
+  output[chars_read] = '\0';
+  return chars_read;
 }
 
 // Every interrupt handler must specify a code selector. We'll use entry 5 (5*8=0x28), which

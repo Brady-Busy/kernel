@@ -103,6 +103,12 @@ void _start(struct stivale2_struct* hdr) {
 
   usable_mem(hdr);
 
+  while (1) {
+    char test[20];
+    kgets (test, 20);
+    kprintf ("%s\n", test);
+  }
+
   // int* p = (int*)0x1;
   // *p = 123;
 

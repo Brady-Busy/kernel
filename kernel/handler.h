@@ -10,3 +10,7 @@
 #include "pic.h"
 
 void idt_setup();
+
+char kgetc();
+
+size_t kgets (char* output, size_t capacity);
