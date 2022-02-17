@@ -4,7 +4,9 @@ This is a project for Grinnell College CSC-395 2022S with professor Charlie Curt
 ## Functionality
 We will list functionalities of our basic kernel below:
 * Printing Functions
-* **Still in progress**
+* Print usable memory
+* Exception printer
+* Virtual to physical address
 
 ## Acknowledgements
 The starter code is provided by professor Charlie Curtsinger, references for starter code is listed below.
