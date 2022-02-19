@@ -14,6 +14,4 @@ void term_setup(struct stivale2_struct* hdr);
 
 void kprintf(const char* format, ...);
 
-void kmemset (void* address, int value, size_t n);
-
 int strlen(char * str);
