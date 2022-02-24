@@ -20,3 +20,7 @@ uintptr_t read_cr3();
 void translate(void* address);
 
 bool vm_map (uintptr_t root, uintptr_t address, bool user, bool writable, bool executable);
+
+bool vm_unmap (uintptr_t root, uintptr_t address);
+
+bool vm_protect (uintptr_t root, uintptr_t address, bool user, bool writable, bool executable);

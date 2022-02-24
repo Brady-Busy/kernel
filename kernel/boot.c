@@ -76,14 +76,20 @@ void _start(struct stivale2_struct* hdr) {
   if (result) {
     *p = 123;
     kprintf("Stored %d at %p\n", *p, p);
+    if (!vm_map(root, (uintptr_t)p, false, true, false)) kprintf("success\n");
+    if(vm_unmap (root, (uintptr_t)p)) kprintf("successful\n");
+    kprintf("Stored %d at %p\n", *p, p);
+    *p = 245;
+    if (vm_map(root, (uintptr_t)p, false, true, false)) kprintf("success again\n");
+    kprintf("Stored %d at %p\n", *p, p);
     } else {
       kprintf("vm_map failed with an error\n");
     }
 
 
-  usable_mem(hdr);
+  //usable_mem(hdr);
 
-  translate(NULL);
+  //translate(NULL);
 
   // while (1) {
   //   char test[20];

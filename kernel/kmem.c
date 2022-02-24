@@ -3,7 +3,7 @@
 uint64_t virtual_base;
 uintptr_t next_free = 0;
 
-
+// setting up the free list, each page in the list is physical address of the page
 void fl_setup(struct stivale2_struct* hdr){
   struct stivale2_mmap_entry* physical_entries;
 
@@ -34,32 +34,37 @@ void fl_setup(struct stivale2_struct* hdr){
 
     //If the cursor is on the last page in the previous chunk, add a pointer to the first page of this chunk
     if (cursor) {
-      *(uintptr_t*)cursor = base;
+      // to access cursor, we need to convert it to virtual
+      *(uintptr_t*)(cursor + virtual_base) = base;
     }
-    // cursor is a virtual address
+    // cursor is a physical address
     cursor = base;
 
     //Now, next_free points to the start of the available memory
     while (cursor < end - PAGE_SIZE) {
-      *(uintptr_t*)cursor = cursor + PAGE_SIZE;
+      // to access cursor, we need to convert it to virtual
+      *(uintptr_t*)(cursor + virtual_base) = cursor + PAGE_SIZE;
       //Move next_free to the next available page
       cursor += PAGE_SIZE;
     }
   }
 }
 
+// return and allocate physical address of next free page
 uintptr_t pmem_alloc(){
   //Store next_free
   uintptr_t result = next_free;
   
-  //Update next_free
-  next_free = *(uintptr_t*)next_free;
+  //Update next_free, converting next_free to virtual to access
+  next_free = *(uintptr_t*)(next_free + virtual_base);
 
   return result;
 }
 
+// p is a physical address
 void pmem_free(uintptr_t p){
-  *(uintptr_t*)p = next_free;
+  // converting physical to virtual for access
+  *(uintptr_t*)(p + virtual_base) = next_free;
   next_free = p;
 }
 
@@ -127,17 +132,17 @@ void translate(void* address) {
 
   for (int i = 0; i < 4; i++){
     int index = get_idx(page_index, 39 - (i * 9), 9);
-    page_entry_t page_entry = table_ref[index];
+    page_entry_t *page_entry = &table_ref[index];
     kprintf ("  Level %d (index %d of 0x%x)\n", 4 - i, index, table_address);
-    table_address = page_entry.physical_address << 12;
+    table_address = page_entry->physical_address << 12;
     table_ref = (page_entry_t*) (table_address + virtual_base);
-    if (!page_entry.present){
+    if (!page_entry->present){
       kprintf ("    not present");
       return;
     }
-    kprintf ("    %s%s%s -> 0x%x\n", page_entry.kernel ? "user ":"kernel ",
-                                     page_entry.writable ? "writable ": "",
-                                     page_entry.no_execute ? "" : "executable",
+    kprintf ("    %s%s%s -> 0x%x\n", page_entry->kernel ? "user ":"kernel ",
+                                     page_entry->writable ? "writable ": "",
+                                     page_entry->no_execute ? "" : "executable",
                                      table_address);
   }
   // table address is now pointing to the physical address of the page
@@ -149,33 +154,93 @@ bool vm_map (uintptr_t root, uintptr_t address, bool user, bool writable, bool e
 
   uintptr_t table_address = root;
   page_entry_t* table_ref = (page_entry_t*) (table_address + virtual_base);
-  page_entry_t page_entry;
+  page_entry_t* page_entry;
 
   //Get us to the page table
   for (int i = 0; i < 4; i++){
     int index = get_idx(page_index, 39 - (i * 9), 9);
-    page_entry = table_ref[index];
-    if (!page_entry.present && i != 3){
-      page_entry.physical_address = pmem_alloc();
-      kmemset (page_entry.physical_address, 0, PAGE_SIZE);
-      page_entry.kernel = page_entry.writable = page_entry.present = true;
-      page_entry.no_execute = false;
+    page_entry = &table_ref[index];
+    if (!page_entry->present && i != 3){
+      page_entry->physical_address = pmem_alloc();
+      kmemset (page_entry->physical_address, 0, PAGE_SIZE);
+      page_entry->kernel = page_entry->writable = page_entry->present = true;
+      page_entry->no_execute = false;
     }
-    table_address = page_entry.physical_address << 12;
+    table_address = page_entry->physical_address << 12;
     table_ref = (page_entry_t*) (table_address + virtual_base);
   }
   // page_entry is now pointing to the page table entry (level 1)
   //Check to see if this page is taken
 
-  if (page_entry.present) {
+  if (page_entry->present) {
     return false;
   } else {
-    page_entry.physical_address = pmem_alloc();
-    kmemset (page_entry.physical_address, 0, PAGE_SIZE);
-    page_entry.kernel = user;
-    page_entry.writable = writable;
-    page_entry.present = true;
-    page_entry.no_execute = executable;
+    page_entry->physical_address = pmem_alloc();
+    kmemset (page_entry->physical_address + virtual_base, 0, PAGE_SIZE);
+    kprintf("%d test test %x\n", *(int*)(page_entry->physical_address + virtual_base),page_entry->physical_address + virtual_base);
+    page_entry->kernel = user;
+    page_entry->writable = writable;
+    page_entry->present = true;
+    page_entry->no_execute = executable;
+    return true;
+  }
+}
+
+bool vm_unmap (uintptr_t root, uintptr_t address){
+  uintptr_t page_index = address;
+
+  uintptr_t table_address = root;
+  page_entry_t* table_ref = (page_entry_t*) (table_address + virtual_base);
+  page_entry_t* page_entry;
+
+  //Get us to the page table
+  for (int i = 0; i < 4; i++){
+    int index = get_idx(page_index, 39 - (i * 9), 9);
+    page_entry = &table_ref[index];
+    if (!page_entry->present){
+      return false;
+    }
+    table_address = page_entry->physical_address << 12;
+    table_ref = (page_entry_t*) (table_address + virtual_base);
+  }
+  // page_entry is now pointing to the page table entry (level 1)
+  //Check to see if this page is taken
+
+  if (!page_entry->present) {
+    return false;
+  } else {
+    pmem_free(page_entry->physical_address);
+    page_entry->present = false;
+    return true;
+  }
+}
+
+bool vm_protect (uintptr_t root, uintptr_t address, bool user, bool writable, bool executable){
+  uintptr_t page_index = address;
+
+  uintptr_t table_address = root;
+  page_entry_t* table_ref = (page_entry_t*) (table_address + virtual_base);
+  page_entry_t* page_entry;
+
+  //Get us to the page table
+  for (int i = 0; i < 4; i++){
+    int index = get_idx(page_index, 39 - (i * 9), 9);
+    page_entry = &table_ref[index];
+    if (!page_entry->present){
+      return false;
+    }
+    table_address = page_entry->physical_address << 12;
+    table_ref = (page_entry_t*) (table_address + virtual_base);
+  }
+  // page_entry is now pointing to the page table entry (level 1)
+  // Check to see if this page is taken
+
+  if (!page_entry->present) {
+    return false;
+  } else {
+    page_entry->kernel = user;
+    page_entry->writable = writable;
+    page_entry->no_execute = executable;
     return true;
   }
 }
