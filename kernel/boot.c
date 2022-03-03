@@ -43,6 +43,43 @@ static struct stivale2_header stivale_hdr = {
   .tags = (uintptr_t)&terminal_hdr_tag
 };
 
+int sys_read (int fd, char const *buf, int size){
+  if (fd != 0){
+    return -1;
+  }
+  return kgets (buf, size);
+}
+
+int sys_write (int fd, const char *buf, int size){
+  if (fd != 1 && fd != 2){
+    return -1;
+  }
+  int counter = 0;
+  while (counter < size){
+    char current = *buf++;
+    if (!current){
+      return counter;
+    }
+    kprint_c(current);
+    counter++;
+  }
+  return size;
+}
+
+int syscall_handler(uint64_t nr, uint64_t arg0, uint64_t arg1, uint64_t arg2, uint64_t arg3, uint64_t arg4, uint64_t arg5) {
+  switch (nr) {
+    case 0:
+      return sys_read(arg0, arg1, arg2);
+    case 1:
+      return sys_write(arg0, arg1, arg2);
+    default:
+      return -1;
+  }
+}
+
+extern int syscall(uint64_t nr, ...);
+extern void syscall_entry();
+
 void _start(struct stivale2_struct* hdr) {
   // We've booted! Let's start processing tags passed to use from the bootloader
   term_setup(hdr);
@@ -53,7 +90,9 @@ void _start(struct stivale2_struct* hdr) {
 
   idt_setup();
   pic_unmask_irq(1);
+  idt_set_handler(0x80, syscall_entry, IDT_TYPE_TRAP);
 
+  /*
   // Print a greeting
   kprintf("Hello Kernel!\n");
   int a =10;
@@ -85,7 +124,11 @@ void _start(struct stivale2_struct* hdr) {
     } else {
       kprintf("vm_map failed with an error\n");
     }
-
+  */
+ while(1){
+  char buf[6];
+  syscall(SYS_read,0,buf,6);
+  kprintf("%d\n", syscall(SYS_write,1,buf,10));}
 
   //usable_mem(hdr);
 

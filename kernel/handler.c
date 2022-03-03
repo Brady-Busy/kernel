@@ -7,13 +7,13 @@ char lower[216];
 char upper[216];
 
 char * dict = "1234567890"
-              "-=\0\0qwerty"
+              "-=\b\0qwerty"
               "uiop[]\n\0as"
               "dfghjkl;'`"
               "\0\\zxcvbnm,"
               "./\0*\0 \0\0\0\0"
               "\0\0\0\0\0\0\0\0\0";
-char * shift_dict = "!@#$%^&*()_+\0\0QWERTYUIOP{}\n\0ASDFGHJKL:\"~\0|ZX"
+char * shift_dict = "!@#$%^&*()_+\b\0QWERTYUIOP{}\n\0ASDFGHJKL:\"~\0|ZX"
 "CVBNM<>?\0*\0 \0\0\0\0\0\0\0\0\0\0\0\0\0";
 
 char key_buffer[128];
@@ -65,11 +65,15 @@ void irq1_handler(interrupt_context_t* ctx) {
     if (upper[code] && length < 128){
         key_buffer[length++, writer++] = upper[code];
         writer %= 128;
+    } else if (!upper[code]){
+      kprintf("\a");
     }
   } else {
     if (lower[code] && length < 128){
         key_buffer[length++, writer++] = lower[code];
         writer %= 128;
+    } else if (!lower[code]){
+      kprintf("\a");
     }
   }
   outb(PIC1_COMMAND, PIC_EOI);
@@ -88,8 +92,13 @@ size_t kgets (char* output, size_t capacity) {
     if (current == '\n') {
       output[chars_read] = '\0';
       return chars_read;
-    }
-    else {
+    } else if (current == '\b'){
+      if (!chars_read){
+        kprintf("\a");
+      } else{
+        chars_read--;
+      }
+    } else {
       output[chars_read++] = current; 
     }
   }
@@ -97,13 +106,6 @@ size_t kgets (char* output, size_t capacity) {
   return chars_read;
 }
 
-// Every interrupt handler must specify a code selector. We'll use entry 5 (5*8=0x28), which
-// is where our bootloader set up a usable code selector for 64-bit mode.
-#define IDT_CODE_SELECTOR 0x28
-
-// IDT entry types
-#define IDT_TYPE_INTERRUPT 0xE
-#define IDT_TYPE_TRAP 0xF
 
 // A struct the matches the layout of an IDT entry
 typedef struct idt_entry {
