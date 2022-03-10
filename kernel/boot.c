@@ -4,6 +4,7 @@
 #include "handler.h"
 #include "tools.h"
 #include "kmem.h"
+#include "elf.h"
 
 #include <stdbool.h>
 
@@ -80,17 +81,103 @@ int syscall_handler(uint64_t nr, uint64_t arg0, uint64_t arg1, uint64_t arg2, ui
 extern int syscall(uint64_t nr, ...);
 extern void syscall_entry();
 
+// Loading executables *TO DO: Move this to the appropriate location*
+
+// Number of modules
+uint64_t module_count;
+
+//Global pointer to array of module descriptors
+struct stivale2_module * modules;
+
+void exec_setup(struct stivale2_struct* hdr) {
+  // Look for a terminal tag
+  struct stivale2_struct_tag_modules* tag = find_tag(hdr, STIVALE2_STRUCT_TAG_MODULES_ID);
+
+  // Make sure we find a module tag
+  if (tag == NULL){
+    kprintf("No modules found\n");
+  }
+
+  //Update module_count & modules pointer
+  module_count = tag->module_count;
+  modules = tag->modules;
+}
+
+typedef void (*elf_exe_t)();
+
+bool exec(struct stivale2_module elf_file) {
+  // Cast the beginning of the elf_file to and elf header
+  Elf64_Ehdr * elf_hdr = (Elf64_Ehdr *) elf_file.begin;
+
+  // Check to confirm that this is executable
+  if (elf_hdr->e_type != 2) {
+    kprintf("%s is not executable\n", elf_file.string);
+    return false;
+  }
+
+  // Get the total number of program header entries + size
+  uint64_t pgm_hdr_count = elf_hdr->e_phnum;
+  uint64_t pgm_hdr_size = elf_hdr->e_phentsize;
+
+  uint64_t root = read_cr3() & 0xFFFFFFFFFFFFF000;
+
+  for (int i = 0; i < pgm_hdr_count; i++) {
+    // Cast the following bits to a program header struct
+    Elf64_Phdr * program_hdr = (Elf64_Phdr *) (elf_file.begin + elf_hdr->e_phoff + (i * pgm_hdr_size));
+
+    // From the program header, find the virtual address where it should be loaded
+    uintptr_t virtual_add = program_hdr->p_vaddr;
+
+    // Grab the flags to update after vm_map
+    uint32_t flags = program_hdr->p_flags;
+
+    if (program_hdr->p_type != 1) continue;
+
+    // Call vm_map to map memory
+    if (!vm_map(root, virtual_add, false, true, false)) {
+      kprintf("vm_map failed\n");
+      return false;
+    }
+
+    // Copying the contents of the executable
+    pmemcpy(virtual_add, elf_file.begin + program_hdr->p_offset, program_hdr->p_filesz);
+
+    // update permissions to reflect input
+    if (!vm_protect(root, virtual_add, false, flags & 2, false & 4)){
+      kprintf("vm_protect failed\n");
+      return false;
+    }
+  }
+
+  elf_exe_t current_exe = (elf_exe_t) (elf_hdr->e_entry);
+  current_exe();
+
+  return true;
+}
+
 void _start(struct stivale2_struct* hdr) {
   // We've booted! Let's start processing tags passed to use from the bootloader
   term_setup(hdr);
   pic_init();
   fl_setup(hdr);
+  exec_setup(hdr);
 
   //Time to make a special interrupt handler
 
   idt_setup();
   pic_unmask_irq(1);
   idt_set_handler(0x80, syscall_entry, IDT_TYPE_TRAP);
+
+
+  kprintf("Modules:\n");
+  for (int i = 0; i < module_count; i++) {
+    //Print name and details
+    kprintf("%s 0x%x-0x%x\n", modules[i].string, modules[i].begin, modules[i].end);
+    if (!exec(modules[i])){
+      kprintf("exec failed\n");
+    }
+  }
+
 
   /*
   // Print a greeting
@@ -125,10 +212,10 @@ void _start(struct stivale2_struct* hdr) {
       kprintf("vm_map failed with an error\n");
     }
   */
- while(1){
-  char buf[6];
-  syscall(SYS_read,0,buf,6);
-  kprintf("%d\n", syscall(SYS_write,1,buf,10));}
+//  while(1){
+//   char buf[6];
+//   syscall(SYS_read,0,buf,6);
+//   kprintf("%d\n", syscall(SYS_write,1,buf,10));}
 
   //usable_mem(hdr);
 

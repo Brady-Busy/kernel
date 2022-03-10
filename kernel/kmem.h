@@ -24,3 +24,5 @@ bool vm_map (uintptr_t root, uintptr_t address, bool user, bool writable, bool e
 bool vm_unmap (uintptr_t root, uintptr_t address);
 
 bool vm_protect (uintptr_t root, uintptr_t address, bool user, bool writable, bool executable);
+
+void pmemcpy(uintptr_t dest, uintptr_t src, uint64_t size);

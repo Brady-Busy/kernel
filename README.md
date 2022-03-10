@@ -7,6 +7,10 @@ We will list functionalities of our basic kernel below:
 * Print usable memory
 * Exception printer
 * Virtual to physical address
+* Page Mapping
+* System call (only read and write)
+* Loading and running executable (elf)
+* **Continues**
 
 ## Acknowledgements
 The starter code is provided by professor Charlie Curtsinger, references for starter code is listed below.

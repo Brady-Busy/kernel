@@ -177,11 +177,10 @@ bool vm_map (uintptr_t root, uintptr_t address, bool user, bool writable, bool e
   } else {
     page_entry->physical_address = pmem_alloc();
     kmemset (page_entry->physical_address + virtual_base, 0, PAGE_SIZE);
-    kprintf("%d test test %x\n", *(int*)(page_entry->physical_address + virtual_base),page_entry->physical_address + virtual_base);
     page_entry->kernel = user;
     page_entry->writable = writable;
     page_entry->present = true;
-    page_entry->no_execute = executable;
+    page_entry->no_execute = !executable;
     return true;
   }
 }
@@ -242,5 +241,15 @@ bool vm_protect (uintptr_t root, uintptr_t address, bool user, bool writable, bo
     page_entry->writable = writable;
     page_entry->no_execute = executable;
     return true;
+  }
+}
+
+void pmemcpy(uintptr_t dest, uintptr_t src, uint64_t size) {
+  //Cast dest and src to char ptrs to copy byte by byte
+  char * dest_c = (char *) dest;
+  char * src_c = (char *) src;
+
+  for (int i = 0; i < size; i++) {
+    *dest_c++ = *src_c++;
   }
 }
