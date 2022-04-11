@@ -27,3 +27,10 @@ void* find_tag(struct stivale2_struct* hdr, uint64_t id) {
   // No matching tag found
 	return NULL;
 }// Find a tag with a given IDL;
+
+int kstrcmp(const char* str1, const char* str2){
+  while (*str1 || *str2){
+    if (*(str1++) != *(str2++)) return 0;
+  }
+  return 1;
+}

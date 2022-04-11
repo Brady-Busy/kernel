@@ -1,3 +1,4 @@
+#pragma once
 /**
  *  Specification of this elf.h is taken from uclibc.org 
  */

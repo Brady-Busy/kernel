@@ -26,3 +26,7 @@ bool vm_unmap (uintptr_t root, uintptr_t address);
 bool vm_protect (uintptr_t root, uintptr_t address, bool user, bool writable, bool executable);
 
 void pmemcpy(uintptr_t dest, uintptr_t src, uint64_t size);
+
+void unmap_lower_half(uintptr_t root);
+
+uint64_t ptov(uint64_t physical_addr);

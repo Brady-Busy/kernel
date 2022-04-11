@@ -1,19 +1,5 @@
 #include "kprint.h"
 
-typedef void (*term_write_t) (const char*, size_t);
-term_write_t term_write;
-
-void term_setup(struct stivale2_struct* hdr) {
-  // Look for a terminal tag
-  struct stivale2_struct_tag_terminal* tag = find_tag(hdr, STIVALE2_STRUCT_TAG_TERMINAL_ID);
-
-  // Make sure we find a terminal tag
-  if (tag == NULL) halt();
-
-  // Save the term_write function pointer
-	term_write = (term_write_t) tag->term_write;
-}
-
 //Given a string, return the length of the string
 int strlen(char * str) {
   //Confirm str is not null
@@ -63,11 +49,13 @@ char* itoa(uint64_t value, char* result, int base) {
 
 //Printing Functions Suite
 void kprint_c(char c) {
-  term_write(&c, 1);
+  term_putchar(c);
 }
 
 void kprint_s(const char * str) {
-  term_write(str, strlen(str));
+  for (int i = 0 ; i < strlen(str); i++){
+    term_putchar(str[i]);
+  }
 }
 
 void kprint_d(uint64_t value) {
@@ -95,7 +83,6 @@ void kprintf(const char* format, ...){
   while (*pos) {
     if (*pos == '%'){
       pos++;
-
       switch (*pos) {
         case '%':
           kprint_c('%');
