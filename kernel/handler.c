@@ -1,10 +1,10 @@
 #include "handler.h"
-
+#include "gdt.h" 
 // interupt handler stuff
 
 // Create a non-shift dictionary
-char lower[216];
-char upper[216];
+char lower[241];
+char upper[241];
 
 char * dict = "1234567890"
               "-=\b\0qwerty"
@@ -50,6 +50,17 @@ void std_handler(interrupt_context_t* ctx) {
   halt();
 }
 
+uintptr_t read_cr2() {
+  uintptr_t value;
+  __asm__("mov %%cr2, %0" : "=r" (value));
+  return value;
+}
+__attribute__((interrupt))
+void pf_handler(interrupt_context_t* ctx) {
+  kprintf("Page fault happened trying to access %p\n", read_cr2());
+  halt();
+}
+
 __attribute__((interrupt))
 void irq1_handler(interrupt_context_t* ctx) {
 
@@ -65,15 +76,17 @@ void irq1_handler(interrupt_context_t* ctx) {
     if (upper[code] && length < 128){
         key_buffer[length++, writer++] = upper[code];
         writer %= 128;
+        term_putchar(upper[code]);
     } else if (!upper[code]){
-      kprintf("\a");
+      //kprintf("%d",code);
     }
   } else {
     if (lower[code] && length < 128){
         key_buffer[length++, writer++] = lower[code];
         writer %= 128;
+        term_putchar(lower[code]);
     } else if (!lower[code]){
-      kprintf("\a");
+      //kprintf("%d",code);
     }
   }
   outb(PIC1_COMMAND, PIC_EOI);
@@ -146,9 +159,9 @@ void idt_set_handler(uint8_t index, void* fn, uint8_t type) {
   current->type = type;
 
   current->present = 1;
-  current->dpl = 0;
+  current->dpl = 3;
   current->ist = 0;
-  current->selector = IDT_CODE_SELECTOR;
+  current->selector = KERNEL_CODE_SELECTOR;//IDT_CODE_SELECTOR
 }
 
 // This struct is used to load an IDT once we've set it up
@@ -177,6 +190,7 @@ void idt_setup() {
 
   // Set up to handle PIC_1 (keyboard interrupt)
   idt_set_handler(IRQ1_INTERRUPT, irq1_handler, IDT_TYPE_INTERRUPT);
+  idt_set_handler (14, pf_handler, IDT_TYPE_INTERRUPT);
 
   // Step 3: Install the IDT
   idt_record_t record = {
