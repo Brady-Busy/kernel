@@ -50,13 +50,134 @@ void std_handler(interrupt_context_t* ctx) {
   halt();
 }
 
+__attribute__((interrupt))
+void divide_error_handler(interrupt_context_t* ctx) {
+  kprintf("Error: Divide Error. See DIV and IDIV instructions\n");
+  halt();
+}
+
+__attribute__((interrupt))
+void debug_handler(interrupt_context_t* ctx) {
+  kprintf("Error: Debug. Check all code and data references\n");
+  halt();
+}
+
+__attribute__((interrupt))
+void nmi_interrupt_handler (interrupt_context_t* ctx) {
+  kprintf("Error: NMI Interrupt (Non-maskable external interrupt\n");
+  halt();
+}
+
+__attribute__((interrupt))
+void breakpoint_handler (interrupt_context_t* ctx) {
+  kprintf("Error: Breakpoint. See INT3 Instruction.\n");
+  halt();
+}
+
+__attribute__((interrupt))
+void overflow_handler (interrupt_context_t* ctx) {
+  kprintf("Error: Overflow. See INTO instruction.\n");
+  halt();
+}
+
+__attribute__((interrupt))
+void bound_range_handler (interrupt_context_t* ctx) {
+  kprintf("Error: BOUND Range Exceeded. See BOUND instruction\n");
+  halt();
+}
+
+__attribute__((interrupt))
+void invalid_opcode_handler (interrupt_context_t* ctx) {
+  kprintf("Error: Invalid Opcode (Undefined Opcode). See UD Instruction or reserved opcode\n");
+  halt();
+}
+
+__attribute__((interrupt))
+void device_unavailable_handler (interrupt_context_t* ctx) {
+  kprintf("Error: Device Not Available (No Math Coprocessor). See floating point or WAIT/FWAIT instructions\n");
+  halt();
+}
+
+__attribute__((interrupt))
+void double_fault_handler (interrupt_context_t* ctx) {
+  kprintf("Error: Double Fault. Check any instruction that can generate an exception, an NMI, or an INTR\n");
+  halt();
+}
+
+__attribute__((interrupt))
+void segment_overrun_handler (interrupt_context_t* ctx) {
+  kprintf("Error: CoProcessor Segment Overrun (reserved). See floating-point instruction\n");
+  halt();
+}
+
+__attribute__((interrupt))
+void invalid_tss_handler (interrupt_context_t* ctx) {
+  kprintf("Error: Invalid TSS. Check task switches and TSS accesses\n");
+  halt();
+}
+
+__attribute__((interrupt))
+void segment_not_present_handler (interrupt_context_t* ctx) {
+  kprintf("Error: Segment Not Present. Check loading segment registers or accessing system segments\n");
+  halt();
+}
+
+__attribute__((interrupt))
+void stack_segfault_handler (interrupt_context_t* ctx) {
+  kprintf("Error: Stack Segment Fault. Check stack operations and SS register loads\n");
+  halt();
+}
+
+__attribute__((interrupt))
+void general_protection_handler (interrupt_context_t* ctx) {
+  kprintf("Error: General Protection. Check any memory references or other protection checks\n");
+  halt();
+}
+
+__attribute__((interrupt))
+void floating_point_handler (interrupt_context_t* ctx) {
+  kprintf("Error: Floating-Point Error (Math Fault). Check floating-point or WAIT/FWAIT instructions\n");
+  halt();
+}
+
+__attribute__((interrupt))
+void alignment_check_handler (interrupt_context_t* ctx) {
+  kprintf("Error: Alighment Check. Any data reference in memory\n");
+  halt();
+}
+
+__attribute__((interrupt))
+void machine_check_handler (interrupt_context_t* ctx) {
+  kprintf("Error: Machine check. Remember, codes are model dependent\n");
+  halt();
+}
+
+__attribute__((interrupt))
+void simd_fp_handler (interrupt_context_t* ctx) {
+  kprintf("Error: SIMD floating-point exception\n");
+  halt();
+}
+
+__attribute__((interrupt))
+void virtualization_exception_handler (interrupt_context_t* ctx) {
+  kprintf("Error: Virtualization exception (EPT violation)\n");
+  halt();
+}
+
+__attribute__((interrupt))
+void control_protection_handler (interrupt_context_t* ctx) {
+  kprintf("Error: Control protection exception. See documentation for details\n");
+  halt();
+}
+
+
 uintptr_t read_cr2() {
   uintptr_t value;
   __asm__("mov %%cr2, %0" : "=r" (value));
   return value;
 }
 __attribute__((interrupt))
-void pf_handler(interrupt_context_t* ctx) {
+void page_fault_handler(interrupt_context_t* ctx) {
   kprintf("Page fault happened trying to access %p\n", read_cr2());
   halt();
 }
@@ -139,7 +260,6 @@ typedef struct idt_entry {
 idt_entry_t idt[256];
 
 
-
 /**
  * Set an interrupt handler for the given interrupt number.
  *
@@ -184,13 +304,36 @@ void idt_setup() {
 
   // Step 2: Use idt_set_handler() to set handlers for the standard exceptions (1--21)
   // Write me!
-  for (int i = 0; i < 21; i++) {
-    idt_set_handler (i, std_handler, IDT_TYPE_INTERRUPT);
-  }
+  idt_set_handler(0, divide_error_handler, IDT_TYPE_INTERRUPT);
+  idt_set_handler(1, debug_handler, IDT_TYPE_INTERRUPT);
+  idt_set_handler(2, nmi_interrupt_handler, IDT_TYPE_INTERRUPT);
+  idt_set_handler(3, breakpoint_handler, IDT_TYPE_INTERRUPT);
+  idt_set_handler(4, overflow_handler, IDT_TYPE_INTERRUPT);
+  idt_set_handler(5, bound_range_handler, IDT_TYPE_INTERRUPT);
+  idt_set_handler(6, invalid_opcode_handler, IDT_TYPE_INTERRUPT);
+  idt_set_handler(7, device_unavailable_handler, IDT_TYPE_INTERRUPT);
+  idt_set_handler(8, double_fault_handler, IDT_TYPE_INTERRUPT);
+  idt_set_handler(9, segment_overrun_handler, IDT_TYPE_INTERRUPT);
+  idt_set_handler(10, invalid_tss_handler, IDT_TYPE_INTERRUPT);
+  idt_set_handler(11, segment_not_present_handler, IDT_TYPE_INTERRUPT);
+  idt_set_handler(12, stack_segfault_handler, IDT_TYPE_INTERRUPT);
+  idt_set_handler(13, general_protection_handler, IDT_TYPE_INTERRUPT);
+  idt_set_handler(14, page_fault_handler, IDT_TYPE_INTERRUPT);
+  //Note, 15 is reserved and thus not initialized here
+  idt_set_handler(16, floating_point_handler, IDT_TYPE_INTERRUPT);
+  idt_set_handler(17, alignment_check_handler, IDT_TYPE_INTERRUPT);
+  idt_set_handler(18, machine_check_handler, IDT_TYPE_INTERRUPT);
+  idt_set_handler(19, simd_fp_handler, IDT_TYPE_INTERRUPT);
+  idt_set_handler(20, virtualization_exception_handler, IDT_TYPE_INTERRUPT);
+  idt_set_handler(21, control_protection_handler, IDT_TYPE_INTERRUPT);
+  // for (int i = 0; i < 21; i++) {
+  //   idt_set_handler (i, std_handler, IDT_TYPE_INTERRUPT);
+  // }
 
   // Set up to handle PIC_1 (keyboard interrupt)
   idt_set_handler(IRQ1_INTERRUPT, irq1_handler, IDT_TYPE_INTERRUPT);
-  idt_set_handler (14, pf_handler, IDT_TYPE_INTERRUPT);
+
+  
 
   // Step 3: Install the IDT
   idt_record_t record = {
