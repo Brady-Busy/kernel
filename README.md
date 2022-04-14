@@ -3,14 +3,15 @@ This is a project for Grinnell College CSC-395 2022S with professor Charlie Curt
 
 ## Functionality
 We will list functionalities of our basic kernel below:
-* Printing Functions
+* Basic IO
 * Print usable memory
 * Exception printer
 * Virtual to physical address
 * Page Mapping
-* System call (only read and write)
+* Basic system call
 * Loading and running executable (elf)
-* **Continues**
+* stdlib
+* Change to usermode
 
 ## Acknowledgements
 The starter code is provided by professor Charlie Curtsinger, references for starter code is listed below.

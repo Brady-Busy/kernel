@@ -60,11 +60,11 @@ char * strtok(char *str, const char * delim) {
     }
 
     // Going to store output here
-    char * ret_token = malloc(strlen(str));
+    char * ret_token = malloc(strlen(str) + 1);
     
     for (int i = 0; i < strlen(cur_input); i++) {
         // iterate through and add to output token, as long as not delimiter
-        if (cur_input[i] != delim) {
+        if (cur_input[i] != *delim) {
             // if not delim, update ret_token
             ret_token[i] = cur_input[i];
         } else {
@@ -96,4 +96,27 @@ char * strpbrk(const char * s1, const char * s2) {
     }
     // If we make it to here, there are no matches
     return NULL;
+}
+
+char* itoa(uint64_t value, char* result, int base) {
+    // check that the base if valid
+    if (base < 2 || base > 36) { *result = '\0'; return result; }
+
+    char* ptr = result, *ptr1 = result, tmp_char;
+    uint64_t tmp_value;
+
+    do {
+        tmp_value = value; //use tmp_value to store the original value
+        value /= base; // update value, which allows us to update the char for pointer below
+        *ptr++ = "0123456789abcdefghijklmnopqrstuvwxyz" [tmp_value - value * base]; //referencing a specific point in the array, this is effectively doing the mod operation
+    } while ( value ); //continue until value is zero
+
+    *ptr-- = '\0'; //null terminator
+    //Based on what we have so far, this is backwards. The following while loop reverses this
+    while(ptr1 < ptr) {
+        tmp_char = *ptr;
+        *ptr--= *ptr1;
+        *ptr1++ = tmp_char;
+    }
+    return result;
 }

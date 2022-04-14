@@ -13,3 +13,5 @@ int write (int fd, const char *buf, int size);
 size_t getline (char * buf, size_t sz, char * fd);
 
 void perror(const char* str);
+
+void printf(const char* format, ...);

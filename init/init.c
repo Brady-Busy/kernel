@@ -8,7 +8,7 @@
 
 void _start() {
   // Issue a write system call
-  write(1, "$", 12);
+  printf("$");
   // char* test_page = (char*)0x400000000;
   // test_page[0] = 'h';
   // test_page[1] = 'e';
@@ -25,6 +25,6 @@ void _start() {
   //syscall(SYS_write, 1, buf, cap)
   char * buf = malloc(80);
   getline(buf, 80, 0);
-  exec(buf, NULL);
+  exec(strtok(buf, " "), NULL);
   exit(1);
 }

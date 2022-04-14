@@ -1,36 +1,5 @@
 #include "kprint.h"
 
-/**
- * C++ version 0.4 char* style "itoa":
- * Written by Lukás Chmela
- * Released under GPLv3.
- * Found here: https://stackoverflow.com/questions/8257714/how-to-convert-an-int-to-string-in-c
- * Adapted and commented by yours truly
- */
-char* itoa(uint64_t value, char* result, int base) {
-    // check that the base if valid
-    if (base < 2 || base > 36) { *result = '\0'; return result; }
-
-    char* ptr = result, *ptr1 = result, tmp_char;
-    uint64_t tmp_value;
-
-    do {
-        tmp_value = value; //use tmp_value to store the original value
-        value /= base; // update value, which allows us to update the char for pointer below
-        *ptr++ = "0123456789abcdefghijklmnopqrstuvwxyz" [tmp_value - value * base]; //referencing a specific point in the array, this is effectively doing the mod operation
-    } while ( value ); //continue until value is zero
-
-    *ptr-- = '\0'; //null terminator
-    //Based on what we have so far, this is backwards. The following while loop reverses this
-    while(ptr1 < ptr) {
-        tmp_char = *ptr;
-        *ptr--= *ptr1;
-        *ptr1++ = tmp_char;
-    }
-    return result;
-}
-
-
 //Printing Functions Suite
 void kprint_c(char c) {
   term_putchar(c);

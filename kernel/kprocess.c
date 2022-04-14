@@ -42,6 +42,11 @@ bool kexec(struct stivale2_module elf_file) {
     if (program_hdr->p_type != 1) continue;
     //kprintf("0x%x\n", virtual_add);
 
+    if (flags == 3 || flags == 7){
+      kprintf("File permission denied (RWE or WE)\n");
+      return false;
+    }
+
     // Call vm_map to map memory
     if (!vm_map(root, virtual_add, false, true, false)) {
       kprintf("vm_map failed\n");
@@ -114,7 +119,7 @@ int sys_exec (const char *program, const char *argv[]){
       return 1;
     }
   }
-  kprintf("no program found\n");
+  kprintf("%s is not found\n", program);
   kexec(*shell_module);
   return 0;
 }
@@ -124,7 +129,6 @@ int sys_exit (int e_code){
     default:
       break;
   }
-  halt();
   kexec(*shell_module);
   return 0;
 }
