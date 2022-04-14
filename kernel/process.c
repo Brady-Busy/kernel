@@ -127,6 +127,19 @@ int sys_exit (int e_code){
   return 0;
 }
 
+int sys_mmap (uintptr_t address, size_t length, int prot){
+  for (uint64_t i = address & (~0xFFF), i < address + length; i += PAGE_SIZE){
+    if (!vm_map(read_cr3() & (~0xFFF), i, true, (prot >> 1) & 1, prot & 1)){
+      for (uint64_t j = i; j >= address & (~0xFFF); j -= PAGE_SIZE){
+        vm_unmap(read_cr3() & (~0xFFF), j);
+      }
+      kprintf("Map failed\n");
+      return 0;
+    }
+  }
+  return 1;
+}
+
 int syscall_handler(uint64_t nr, uint64_t arg0, uint64_t arg1, uint64_t arg2, uint64_t arg3, uint64_t arg4, uint64_t arg5) {
   switch (nr) {
     case 0:
@@ -137,6 +150,8 @@ int syscall_handler(uint64_t nr, uint64_t arg0, uint64_t arg1, uint64_t arg2, ui
       return sys_exec(arg0, arg1);
     case 3:
       return sys_exit(arg0);
+    case 4:
+      return sys_mmap(arg0, arg1, arg2);
     default:
       return -1;
   }
