@@ -41,10 +41,9 @@ void print_p(void* ptr) {
   print_x(val);
 }
 
-void printf(const char* format, ...){
+void printf(const char* format, ...) {
   va_list args;
   va_start (args, format);
-
   const char* pos = format;
 
   while (*pos) {
@@ -70,7 +69,7 @@ void printf(const char* format, ...){
           print_p(va_arg(args,void*));
           break;
         default:
-          print_s("???");
+          print_s("Invalid wildcard specified for printing");
       }
       pos++;
     }
@@ -79,6 +78,5 @@ void printf(const char* format, ...){
       pos++;
     }
   }
-
   va_end (args);
 }

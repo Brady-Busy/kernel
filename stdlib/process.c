@@ -1,5 +1,6 @@
 #include "process.h"
 
+//Wrappers for system calls to exec and exit
 int exec (const char *program, const char *argv[]){
   return syscall(SYS_exec, program, argv);
 }
