@@ -8,4 +8,5 @@
 int exec (const char *program, const char *argv[]);
 
 // Loads and executes the init program (shell), thus exiting from the current program
+// Returns 0 upon success (although this will not actually end up returning as it launches init within it)
 int exit (int e_code);
