@@ -99,8 +99,8 @@ void device_unavailable_handler (interrupt_context_t* ctx) {
 }
 
 __attribute__((interrupt))
-void double_fault_handler (interrupt_context_t* ctx) {
-  kprintf("Error: Double Fault. Check any instruction that can generate an exception, an NMI, or an INTR\n");
+void double_fault_handler (interrupt_context_t* ctx, unsigned long code) {
+  kprintf("Error: Double Fault. Code: %d Check any instruction that can generate an exception, an NMI, or an INTR\n", code);
   halt();
 }
 
@@ -111,26 +111,26 @@ void segment_overrun_handler (interrupt_context_t* ctx) {
 }
 
 __attribute__((interrupt))
-void invalid_tss_handler (interrupt_context_t* ctx) {
-  kprintf("Error: Invalid TSS. Check task switches and TSS accesses\n");
+void invalid_tss_handler (interrupt_context_t* ctx, unsigned long code) {
+  kprintf("Error: Invalid TSS. Code: %d. Check task switches and TSS accesses\n", code);
   halt();
 }
 
 __attribute__((interrupt))
-void segment_not_present_handler (interrupt_context_t* ctx) {
-  kprintf("Error: Segment Not Present. Check loading segment registers or accessing system segments\n");
+void segment_not_present_handler (interrupt_context_t* ctx, unsigned long code) {
+  kprintf("Error: Segment Not Present. Code: %d. Check loading segment registers or accessing system segments\n", code);
   halt();
 }
 
 __attribute__((interrupt))
-void stack_segfault_handler (interrupt_context_t* ctx) {
-  kprintf("Error: Stack Segment Fault. Check stack operations and SS register loads\n");
+void stack_segfault_handler (interrupt_context_t* ctx, unsigned long code) {
+  kprintf("Error: Stack Segment Fault. Code: %d. Check stack operations and SS register loads\n", code);
   halt();
 }
 
 __attribute__((interrupt))
-void general_protection_handler (interrupt_context_t* ctx) {
-  kprintf("Error: General Protection. Check any memory references or other protection checks\n");
+void general_protection_handler (interrupt_context_t* ctx, unsigned long code) {
+  kprintf("Error: General Protection. Code: %d. Check any memory references or other protection checks\n", code);
   halt();
 }
 
@@ -141,8 +141,8 @@ void floating_point_handler (interrupt_context_t* ctx) {
 }
 
 __attribute__((interrupt))
-void alignment_check_handler (interrupt_context_t* ctx) {
-  kprintf("Error: Alighment Check. Any data reference in memory\n");
+void alignment_check_handler (interrupt_context_t* ctx, unsigned long code) {
+  kprintf("Error: Alighment Check. Code: %d. Any data reference in memory\n", code);
   halt();
 }
 
@@ -165,8 +165,8 @@ void virtualization_exception_handler (interrupt_context_t* ctx) {
 }
 
 __attribute__((interrupt))
-void control_protection_handler (interrupt_context_t* ctx) {
-  kprintf("Error: Control protection exception. See documentation for details\n");
+void control_protection_handler (interrupt_context_t* ctx, unsigned long code) {
+  kprintf("Error: Control protection exception. Code: %d. See documentation for details\n", code);
   halt();
 }
 
@@ -177,8 +177,8 @@ uintptr_t read_cr2() {
   return value;
 }
 __attribute__((interrupt))
-void page_fault_handler(interrupt_context_t* ctx) {
-  kprintf("Page fault happened trying to access %p\n", read_cr2());
+void page_fault_handler(interrupt_context_t* ctx, unsigned long code) {
+  kprintf("Page fault happened trying to access %p. Code: %d.\n", read_cr2(), code);
   halt();
 }
 
