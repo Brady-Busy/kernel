@@ -1,13 +1,5 @@
 #include "tools.h"
 
-void kmemset (void* address, int value, size_t n) {
-  char* cursor = (char*) address;
-  for (int i = 0; i < n; i++) {
-    *cursor = value;
-    cursor++;
-  }
-}
-
 // Find a tag with a given ID
 void* find_tag(struct stivale2_struct* hdr, uint64_t id) {
   // Start at the first tag

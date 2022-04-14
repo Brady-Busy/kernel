@@ -60,7 +60,7 @@ char * strtok(char *str, const char * delim) {
     }
 
     // Going to store output here
-    char * ret_token;
+    char * ret_token = malloc(strlen(str));
     
     for (int i = 0; i < strlen(cur_input); i++) {
         // iterate through and add to output token, as long as not delimiter
@@ -88,7 +88,7 @@ char * strpbrk(const char * s1, const char * s2) {
     for (int i = 0; i < strlen(s1); i++) {
         char cur = s1[i];
         for (int j = 0; j < strlen(s2); j++) {
-            if (cur = s2[j]) {
+            if (cur == s2[j]) {
                 // found the first match, return the address
                 return s1 + i;
             }

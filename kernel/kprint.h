@@ -3,6 +3,7 @@
 #include <stdint.h>
 #include <stddef.h>
 #include <stdarg.h>
+#include <string.h>
 
 #include "stivale2.h"
 #include "util.h"
@@ -14,5 +15,3 @@
 void kprintf(const char* format, ...);
 
 void kprint_c(char c);
-
-int strlen(char * str);

@@ -3,11 +3,13 @@
 #include <stdint.h>
 #include <stddef.h>
 #include <stdarg.h>
+#include <mem.h>
 
 #include "stivale2.h"
 #include "util.h"
 #include "port.h"
 #include "pic.h"
+#include "gdt.h"
 
 // Every interrupt handler must specify a code selector. We'll use entry 5 (5*8=0x28), which
 // is where our bootloader set up a usable code selector for 64-bit mode.

@@ -1,21 +1,5 @@
 #include "kprint.h"
 
-//Given a string, return the length of the string
-int strlen(char * str) {
-  //Confirm str is not null
-  if (str == NULL) {
-    return 0;
-  }
-  //Count until null terminator
-  int count = 0;
-  char * tracer = str; //start at the beginning of the string
-  while (*tracer != '\0') {
-    count++;
-    tracer++; // move the pointer
-  }
-  return count;
-}
-
 /**
  * C++ version 0.4 char* style "itoa":
  * Written by Lukás Chmela

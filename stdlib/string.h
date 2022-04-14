@@ -1,5 +1,6 @@
 #pragma once
 #include <stddef.h>
+#include <system.h>
 
 int strcmp(const char* str1, const char* str2);
 

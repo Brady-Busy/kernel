@@ -8,7 +8,7 @@
 #include "elf.h"
 #include "gdt.h"
 #include "usermode_entry.h"
-#include "process.h"
+#include "kprocess.h"
 #include <stdbool.h>
 
 // Reserve space for the stack

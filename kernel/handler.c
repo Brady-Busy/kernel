@@ -1,5 +1,4 @@
 #include "handler.h"
-#include "gdt.h" 
 // interupt handler stuff
 
 // Create a non-shift dictionary
@@ -300,7 +299,7 @@ void idt_setup() {
   init_scan_dict();
   // Step 1: Zero out the IDT, probably using memset (which you'll have to implement)
   // Write me!
-  kmemset (&idt, 0, 256*sizeof(idt_entry_t));
+  memset (&idt, 0, 256*sizeof(idt_entry_t));
 
   // Step 2: Use idt_set_handler() to set handlers for the standard exceptions (1--21)
   // Write me!

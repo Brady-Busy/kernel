@@ -1,4 +1,4 @@
-#include "process.h"
+#include "kprocess.h"
 
 // Number of modules
 uint64_t module_count;
@@ -11,8 +11,7 @@ struct stivale2_module * shell_module;
 
 //typedef void (*elf_exe_t)();
 
-bool exec(struct stivale2_module elf_file) {
-
+bool kexec(struct stivale2_module elf_file) {
   unmap_lower_half(read_cr3());
 
   // Cast the beginning of the elf_file to and elf header
@@ -50,7 +49,7 @@ bool exec(struct stivale2_module elf_file) {
     }
 
     // Copying the contents of the executable
-    pmemcpy(virtual_add, elf_file.begin + program_hdr->p_offset, program_hdr->p_filesz);
+    memcpy(virtual_add, elf_file.begin + program_hdr->p_offset, program_hdr->p_filesz);
 
     // update permissions to reflect input
     if (!vm_protect(root, virtual_add, true, (flags & 2) >> 1, flags & 1)){
@@ -111,9 +110,12 @@ int sys_exec (const char *program, const char *argv[]){
   for (int i = 0; i < module_count; i++) {
     //Print name and details
     if (kstrcmp(modules[i].string, program)){
-      exec(modules[i]);
+      kexec(modules[i]);
+      return 1;
     }
   }
+  kprintf("no program found\n");
+  kexec(*shell_module);
   return 0;
 }
 
@@ -123,21 +125,33 @@ int sys_exit (int e_code){
       break;
   }
   halt();
-  exec(*shell_module);
+  kexec(*shell_module);
   return 0;
 }
 
-int sys_mmap (uintptr_t address, size_t length, int prot){
-  for (uint64_t i = address & (~0xFFF), i < address + length; i += PAGE_SIZE){
-    if (!vm_map(read_cr3() & (~0xFFF), i, true, (prot >> 1) & 1, prot & 1)){
-      for (uint64_t j = i; j >= address & (~0xFFF); j -= PAGE_SIZE){
-        vm_unmap(read_cr3() & (~0xFFF), j);
-      }
+uint64_t virtual_fl = 0x100000000;
+
+int sys_mmap (uintptr_t address, uintptr_t free_ptr, int prot){
+  // if address NULL, peek the front of the freelist, and map its corresponding virtual address and return to user
+  if (address == NULL){
+    *(uintptr_t*)free_ptr = virtual_fl;
+    virtual_fl += PAGE_SIZE;
+    if (!vm_map(read_cr3() & (~0xFFF), *(uintptr_t*)free_ptr, true, (prot >> 1) & 1, prot & 1)){
+      kprintf("Map failed with %x\n", *(uintptr_t*)free_ptr);
+      return 0;
+    }
+  } else {
+    if (!vm_map(read_cr3() & (~0xFFF), address, true, (prot >> 1) & 1, prot & 1)){
       kprintf("Map failed\n");
       return 0;
     }
+    *(uintptr_t*)free_ptr = address;
   }
   return 1;
+}
+
+int sys_getline (uintptr_t buffer, size_t sz, uintptr_t fd) {
+  return kgets(buffer, sz);
 }
 
 int syscall_handler(uint64_t nr, uint64_t arg0, uint64_t arg1, uint64_t arg2, uint64_t arg3, uint64_t arg4, uint64_t arg5) {
@@ -152,6 +166,8 @@ int syscall_handler(uint64_t nr, uint64_t arg0, uint64_t arg1, uint64_t arg2, ui
       return sys_exit(arg0);
     case 4:
       return sys_mmap(arg0, arg1, arg2);
+    case 5:
+      return sys_getline(arg0, arg1, arg2);
     default:
       return -1;
   }
@@ -174,7 +190,8 @@ void exec_setup(struct stivale2_struct* hdr) {
     //Print name and details
     if (kstrcmp(modules[i].string, "init")){
       shell_module = &modules[i];
-      exec(*shell_module);
+      virtual_fl = 0x100000000;
+      kexec(*shell_module);
       return;
     }
   }

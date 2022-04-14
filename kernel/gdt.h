@@ -7,5 +7,10 @@
 #define USER_DATA_SELECTOR 0x20
 #define TSS_SELECTOR 0x28
 
+#include <mem.h>
+#include <stdint.h>
+#include <stddef.h>
+#include <stdbool.h>
+
 // Set up and load the GDT
 void gdt_setup();

@@ -1,13 +1,9 @@
 #pragma once
 
-#include "../kernel/process.h"
 #include <stdint.h>
 #include <stddef.h>
-#include <stdbool.h>
-#include "../kernel/handler.h"
+#include <stdarg.h>
 
-void* mmap (uintptr_t address, size_t length, int prot);
+void memcpy(uintptr_t dest, uintptr_t src, uint64_t size);
 
-void* malloc (size_t sz);
-
-void free(void* p);
+void memset (void* address, int value, size_t n);

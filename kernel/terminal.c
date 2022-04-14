@@ -1,5 +1,4 @@
 #include "terminal.h"
-#include "kmem.h"
 
 #define VGA_BUFFER 0xB8000
 #define VGA_WIDTH 80
@@ -104,7 +103,7 @@ void term_putchar(char c) {
   // Scroll if needed
   if (term_row == VGA_HEIGHT) {
     // Shift characters up a row
-    pmemcpy(term, &term[VGA_WIDTH], sizeof(vga_entry_t) * VGA_WIDTH * (VGA_HEIGHT - 1));
+    memcpy(term, &term[VGA_WIDTH], sizeof(vga_entry_t) * VGA_WIDTH * (VGA_HEIGHT - 1));
     term_row--;
     
     // Clear the last row

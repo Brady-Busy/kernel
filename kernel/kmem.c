@@ -181,7 +181,7 @@ bool vm_map (uintptr_t root, uintptr_t address, bool user, bool writable, bool e
     page_entry = &table_ref[index];
     if (!page_entry->present && i != 3){
       page_entry->address = pmem_alloc() >> 12;
-      kmemset (ptov(page_entry->address << 12), 0, PAGE_SIZE);
+      memset (ptov(page_entry->address << 12), 0, PAGE_SIZE);
       page_entry->user = page_entry->writable = page_entry->present = true;
       page_entry->no_execute = false;
     }
@@ -196,7 +196,7 @@ bool vm_map (uintptr_t root, uintptr_t address, bool user, bool writable, bool e
     return false;
   } else {
     page_entry->address = pmem_alloc() >> 12;
-    kmemset (ptov(page_entry->address << 12), 0, PAGE_SIZE);
+    memset (ptov(page_entry->address << 12), 0, PAGE_SIZE);
     page_entry->user = user;
     page_entry->writable = writable;
     page_entry->present = true;
@@ -264,16 +264,6 @@ bool vm_protect (uintptr_t root, uintptr_t address, bool user, bool writable, bo
     page_entry->no_execute = !executable;
     invalidate_tlb(ptov(page_entry->address << 12));
     return true;
-  }
-}
-
-void pmemcpy(uintptr_t dest, uintptr_t src, uint64_t size) {
-  //Cast dest and src to char ptrs to copy byte by byte
-  char * dest_c = (char *) dest;
-  char * src_c = (char *) src;
-
-  for (int i = 0; i < size; i++) {
-    *dest_c++ = *src_c++;
   }
 }
 

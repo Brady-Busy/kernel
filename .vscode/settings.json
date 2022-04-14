@@ -7,6 +7,9 @@
     "stdint.h": "c",
     "stivale2.h": "c",
     "stddef.h": "c",
-    "stdarg.h": "c"
+    "stdarg.h": "c",
+    "string_view": "c",
+    "initializer_list": "c",
+    "utility": "c"
   }
 }

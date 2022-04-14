@@ -3,9 +3,9 @@
 #define OFFSET 4095
 #define PAGE_SIZE 4096 //assume 4kb pages
 
-#include "tools.h"
 #include "kprint.h"
 #include <stdbool.h>
+#include <mem.h>
 
 void fl_setup(struct stivale2_struct* hdr);
 
@@ -24,8 +24,6 @@ bool vm_map (uintptr_t root, uintptr_t address, bool user, bool writable, bool e
 bool vm_unmap (uintptr_t root, uintptr_t address);
 
 bool vm_protect (uintptr_t root, uintptr_t address, bool user, bool writable, bool executable);
-
-void pmemcpy(uintptr_t dest, uintptr_t src, uint64_t size);
 
 void unmap_lower_half(uintptr_t root);
 
