@@ -22,7 +22,7 @@ void* malloc(size_t sz) {
   // Do we have enough space to satisfy this allocation?
   if (space_remaining < sz) {
     void* newmem = mmap(NULL, 2);
-
+    
     // Check for errors
     if (newmem == NULL) {
       return NULL;

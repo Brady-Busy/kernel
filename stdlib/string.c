@@ -1,14 +1,13 @@
 #include "string.h"
 
-int strcmp(const char* str1, const char* str2){
+int strcmp (const char* str1, const char* str2){
   while (*str1 || *str2){
     if (*(str1++) != *(str2++)) return 0;
   }
   return 1;
 }
 
-//Given a string, return the length of the string
-int strlen(char * str) {
+int strlen (char * str) {
   //Confirm str is not null
   if (str == NULL) {
     return 0;
@@ -23,8 +22,7 @@ int strlen(char * str) {
   return count;
 }
 
-// Convert a string into an integer value, if no non-integer, return 0
-int atoi(const char * str) {
+int atoi (const char * str) {
     int result = 0; 
     int power = strlen(str);
     char * ptr = str;
@@ -38,27 +36,24 @@ int atoi(const char * str) {
     }
 }
 
-char * strcpy(char * dest, const char * src) {
+char * strcpy (char * dest, const char * src) {
     while(src++ != NULL) {
         *dest++ = *src++;
     }
-
     return dest;
 }
 
-char * strtok(char *str, const char * delim) {
+char * strtok (char *str, const char * delim) {
     static char * cur_input;
     // Check if str is null
     if (str != NULL) {
         // update cur_input
         cur_input = str;
     }
-
     // all tokens extracted?
     if (cur_input == NULL) {
         return NULL;
     }
-
     // Going to store output here
     char * ret_token = malloc(strlen(str) + 1);
     
@@ -83,7 +78,7 @@ char * strtok(char *str, const char * delim) {
     return ret_token;
 }
 
-char * strpbrk(const char * s1, const char * s2) {
+char * strpbrk (const char * s1, const char * s2) {
     // Iterate through each char in s1 and compare with each in s2
     for (int i = 0; i < strlen(s1); i++) {
         char cur = s1[i];
@@ -98,19 +93,17 @@ char * strpbrk(const char * s1, const char * s2) {
     return NULL;
 }
 
-char* itoa(uint64_t value, char* result, int base) {
+char* itoa (uint64_t value, char* result, int base) {
     // check that the base if valid
     if (base < 2 || base > 36) { *result = '\0'; return result; }
 
     char* ptr = result, *ptr1 = result, tmp_char;
     uint64_t tmp_value;
-
     do {
         tmp_value = value; //use tmp_value to store the original value
         value /= base; // update value, which allows us to update the char for pointer below
         *ptr++ = "0123456789abcdefghijklmnopqrstuvwxyz" [tmp_value - value * base]; //referencing a specific point in the array, this is effectively doing the mod operation
     } while ( value ); //continue until value is zero
-
     *ptr-- = '\0'; //null terminator
     //Based on what we have so far, this is backwards. The following while loop reverses this
     while(ptr1 < ptr) {
