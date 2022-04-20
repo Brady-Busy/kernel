@@ -12,6 +12,5 @@
 #define MAX_LENGTH_HEX 17 //note: 16 plus one for a null terminating character
 #define MAX_LENGTH_DEC 21
 
+// acts as printf with fewer format specifiers
 void kprintf(const char* format, ...);
-
-void kprint_c(char c);

@@ -7,11 +7,9 @@ uint64_t module_count;
 struct stivale2_module * modules;
 struct stivale2_module * shell_module;
 
-
-
-//typedef void (*elf_exe_t)();
-
+// Given an elf file, it will 
 bool kexec(struct stivale2_module elf_file) {
+  // unmap lower half for current program
   unmap_lower_half(read_cr3());
 
   // Cast the beginning of the elf_file to and elf header
@@ -64,30 +62,25 @@ bool kexec(struct stivale2_module elf_file) {
   }
 
   // Pick an arbitrary location and size for the user-mode stack
-    uintptr_t user_stack = 0x70000000000;
+  uintptr_t user_stack = 0x70000000000;
 
-    size_t user_stack_size = 8 * PAGE_SIZE;
+  size_t user_stack_size = 8 * PAGE_SIZE;
 
-    // Map the user-mode-stack, somehow without <=, it will make page fault
-    for(uintptr_t p = user_stack; p <= user_stack + user_stack_size; p += 0x1000) {
-      // Map a page that is user-accessible, writable, but not executable
-      vm_map(read_cr3() & 0xFFFFFFFFFFFFF000, p, true, true, false);
-      //kprintf("%x after vmmap\n", p);
-      //translate(p);
-    }
-    //And now jump to the entry point
-    usermode_entry(USER_DATA_SELECTOR | 0x3,            // User data selector with priv=3
-                    user_stack + user_stack_size - 8,   // Stack starts at the high address minus 8 bytes
-                    USER_CODE_SELECTOR | 0x3,           // User code selector with priv=3
-                    elf_hdr->e_entry);                     // Jump to the entry point specified in the ELF file
+  // Map the user-mode-stack, somehow without <=, it will make page fault
+  for(uintptr_t p = user_stack; p <= user_stack + user_stack_size; p += 0x1000) {
+    // Map a page that is user-accessible, writable, but not executable
+    vm_map(read_cr3() & 0xFFFFFFFFFFFFF000, p, true, true, false);
+  }
+  //And now jump to the entry point
+  usermode_entry(USER_DATA_SELECTOR | 0x3,            // User data selector with priv=3
+                  user_stack + user_stack_size - 8,   // Stack starts at the high address minus 8 bytes
+                  USER_CODE_SELECTOR | 0x3,           // User code selector with priv=3
+                  elf_hdr->e_entry);                     // Jump to the entry point specified in the ELF file
 
-  // elf_exe_t current_exe = (elf_exe_t) (elf_hdr->e_entry);
-  // current_exe();
-
-  
   return true;
 }
 
+// system call to read from standard input
 int sys_read (int fd, char const *buf, int size){
   if (fd != 0){
     return -1;
@@ -95,6 +88,7 @@ int sys_read (int fd, char const *buf, int size){
   return kgets (buf, size);
 }
 
+// write to standard output, printf and printerr would be foundimentally the same
 int sys_write (int fd, const char *buf, int size){
   if (fd != 1 && fd != 2){
     return -1;
@@ -111,33 +105,38 @@ int sys_write (int fd, const char *buf, int size){
   return size;
 }
 
+// it will iterate through the modules list, find corresponding program with given string and execute it.
+// if the program is not found, it will print an error message and then execute shell instead. 
 int sys_exec (const char *program, const char *argv[]){
   for (int i = 0; i < module_count; i++) {
     //Print name and details
-    if (kstrcmp(modules[i].string, program)){
+    if (strcmp(modules[i].string, program)){
       kexec(modules[i]);
       return 1;
     }
   }
-  kprintf("%s is not found\n", program);
+  kprintf("program %s not found\n", program);
   kexec(*shell_module);
   return 0;
 }
 
+// start shell program
 int sys_exit (int e_code){
   switch (e_code){
-    default:
+    default: // reserved for exit code
       break;
   }
   kexec(*shell_module);
   return 0;
 }
 
+// this is the start of virtual address free list, it is picked abstractly
+// other functions should not use virtual address from 0x100000000 to 0x200000000
 uint64_t virtual_fl = 0x100000000;
 
 int sys_mmap (uintptr_t address, uintptr_t free_ptr, int prot){
-  // if address NULL, peek the front of the freelist, and map its corresponding virtual address and return to user
   if (address == NULL){
+    // if address is null, we will get an virtual address from freelist, map and pass it to free_ptr
     *(uintptr_t*)free_ptr = virtual_fl;
     virtual_fl += PAGE_SIZE;
     if (!vm_map(read_cr3() & (~0xFFF), *(uintptr_t*)free_ptr, true, (prot >> 1) & 1, prot & 1)){
@@ -145,19 +144,21 @@ int sys_mmap (uintptr_t address, uintptr_t free_ptr, int prot){
       return 0;
     }
   } else {
+    // if address is given, map that address, free_ptr could be passed as NULL
     if (!vm_map(read_cr3() & (~0xFFF), address, true, (prot >> 1) & 1, prot & 1)){
       kprintf("Map failed\n");
       return 0;
     }
-    *(uintptr_t*)free_ptr = address;
   }
   return 1;
 }
 
+// get next line from standard input
 int sys_getline (uintptr_t buffer, size_t sz, uintptr_t fd) {
   return kgets(buffer, sz);
 }
 
+// call corresponding system calls
 int syscall_handler(uint64_t nr, uint64_t arg0, uint64_t arg1, uint64_t arg2, uint64_t arg3, uint64_t arg4, uint64_t arg5) {
   switch (nr) {
     case 0:
@@ -177,6 +178,7 @@ int syscall_handler(uint64_t nr, uint64_t arg0, uint64_t arg1, uint64_t arg2, ui
   }
 }
 
+// add all modules from bootloader to a list, then load init or shell program
 void exec_setup(struct stivale2_struct* hdr) {
   // Look for a terminal tag
   struct stivale2_struct_tag_modules* tag = find_tag(hdr, STIVALE2_STRUCT_TAG_MODULES_ID);
@@ -184,6 +186,7 @@ void exec_setup(struct stivale2_struct* hdr) {
   // Make sure we find a module tag
   if (tag == NULL){
     kprintf("No modules found\n");
+    return;
   }
 
   //Update module_count & modules pointer
@@ -192,7 +195,7 @@ void exec_setup(struct stivale2_struct* hdr) {
 
   for (int i = 0; i < module_count; i++) {
     //Print name and details
-    if (kstrcmp(modules[i].string, "init")){
+    if (strcmp(modules[i].string, "init")){
       shell_module = &modules[i];
       virtual_fl = 0x100000000;
       kexec(*shell_module);
@@ -200,4 +203,5 @@ void exec_setup(struct stivale2_struct* hdr) {
     }
   }
   kprintf("Could not find shell\n");
+  halt();
 }

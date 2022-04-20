@@ -1,10 +1,11 @@
 #pragma once
-#include "kprint.h"
+
 #include <stdint.h>
 #include <stddef.h>
 #include <stdarg.h>
 #include <mem.h>
 
+#include "kprint.h"
 #include "stivale2.h"
 #include "util.h"
 #include "port.h"
@@ -23,10 +24,17 @@
 #define SYS_read 0
 #define SYS_write 1
 
+// setting up the idt
 void idt_setup();
 
+// set up specified handler. 0-21 and 128 is used for standard errors and systemcall
 void idt_set_handler(uint8_t index, void* fn, uint8_t type);
 
+// get next char from keyboard input and return
 char kgetc();
 
+// get capacity - 1 chars from keyboard input, return number of chars read
 size_t kgets (char* output, size_t capacity);
+
+extern int syscall(uint64_t nr, ...);
+extern void syscall_entry();

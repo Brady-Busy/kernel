@@ -11,7 +11,7 @@
 #include "gdt.h"
 #include "usermode_entry.h"
 #include <mem.h>
-
+#include <string.h>
 
 #define SYS_read 0
 #define SYS_write 1
@@ -20,6 +20,7 @@
 #define SYS_mmap 4
 #define SYS_getline 5
 
+// Exec_setup will load all the modules from the boot loader, and execute "init" to start a shell
 void exec_setup(struct stivale2_struct* hdr);
 
 extern int syscall(uint64_t nr, ...);

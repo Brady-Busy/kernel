@@ -12,6 +12,7 @@ typedef uint32_t Elf64_Sword;
 typedef uint64_t Elf64_Xword;
 typedef uint64_t Elf64_Sxword;
 
+// Elf header struct
 typedef struct
 {
     char e_ident[16];
@@ -30,6 +31,7 @@ typedef struct
     Elf64_Half e_shstrdx;
 } Elf64_Ehdr;
 
+// Elf program header
 typedef struct
 {
     Elf64_Word p_type;

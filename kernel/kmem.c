@@ -3,10 +3,12 @@
 uint64_t virtual_base;
 uintptr_t next_free = 0;
 
+// update cache
 void invalidate_tlb(uintptr_t virtual_address) {
    __asm__("invlpg (%0)" :: "r" (virtual_address) : "memory");
 }
 
+// must be called after fl_setup()
 uint64_t ptov(uint64_t physical_addr){
   return physical_addr + virtual_base;
 }
@@ -23,9 +25,6 @@ void fl_setup(struct stivale2_struct* hdr){
   virtual_base = virtual_tag -> addr;
 
   uintptr_t cursor = 0;
-
-  //term_init();
-  //kprintf("%x\n", virtual_base);
 
   // iterating through physical_entries, we trust physical_tag to give us correct number of entries
   for (int i = 0; i < num_entries; i++) {
@@ -77,14 +76,13 @@ uintptr_t pmem_alloc(){
 void pmem_free(uintptr_t p){
   // converting physical to virtual for access
   *(uintptr_t*)ptov(p) = next_free;
-  //kprintf("added 0x%x to the freelist\n",*(uintptr_t*)ptov(p));
   next_free = p;
-  //halt();
 }
 
 void usable_mem (struct stivale2_struct* hdr) {
   struct stivale2_mmap_entry* physical_entries;
 
+  // get the tag that contain information about usable memory from bootloader
   struct stivale2_struct_tag_memmap* physical_tag = (struct stivale2_struct_tag_memmap*) find_tag(hdr, STIVALE2_STRUCT_TAG_MEMMAP_ID);
   uint64_t num_entries = physical_tag -> entries;
   physical_entries = physical_tag -> memmap;
@@ -136,6 +134,7 @@ void write_cr3(uint64_t value) {
   __asm__("mov %0, %%cr3" : : "r" (value));
 }
 
+// it will mask out all digits in page_index besides digit from beginning to beggining + mask
 uint64_t get_idx(uintptr_t page_index, int beginning, int mask){
   return (page_index >> beginning) & ((1 << mask) - 1);
 }
@@ -170,23 +169,21 @@ bool vm_map (uintptr_t root, uintptr_t address, bool user, bool writable, bool e
   //kprintf("trying to map %x\n", address);
   uintptr_t page_index = address;
 
-  uintptr_t table_address = root;
-  page_entry_t* table_ref = (page_entry_t*) ptov(table_address);
+  page_entry_t* table_ref = (page_entry_t*) ptov(root);
   page_entry_t* page_entry;
 
   //Get us to the page table
   for (int i = 0; i < 4; i++){
     int index = get_idx(page_index, 39 - (i * 9), 9);
-    //kprintf ("index is %d for level %d\n", index, 4-i);
     page_entry = &table_ref[index];
+    // if lv 2 - 4 is not present, get a new page and map them with all permissions on
     if (!page_entry->present && i != 3){
       page_entry->address = pmem_alloc() >> 12;
       memset (ptov(page_entry->address << 12), 0, PAGE_SIZE);
       page_entry->user = page_entry->writable = page_entry->present = true;
       page_entry->no_execute = false;
     }
-    table_address = page_entry->address << 12;
-    table_ref = (page_entry_t*) ptov(table_address);
+    table_ref = (page_entry_t*) ptov(page_entry->address << 12);
   }
   // page_entry is now pointing to the page table entry (level 1)
   //Check to see if this page is taken
@@ -195,6 +192,7 @@ bool vm_map (uintptr_t root, uintptr_t address, bool user, bool writable, bool e
   if (page_entry->present) {
     return false;
   } else {
+    // map new page and then change permissions
     page_entry->address = pmem_alloc() >> 12;
     memset (ptov(page_entry->address << 12), 0, PAGE_SIZE);
     page_entry->user = user;
@@ -209,8 +207,7 @@ bool vm_map (uintptr_t root, uintptr_t address, bool user, bool writable, bool e
 bool vm_unmap (uintptr_t root, uintptr_t address){
   uintptr_t page_index = address;
 
-  uintptr_t table_address = root;
-  page_entry_t* table_ref = (page_entry_t*) ptov(table_address);
+  page_entry_t* table_ref = (page_entry_t*) ptov(root);
   page_entry_t* page_entry;
 
   //Get us to the page table
@@ -220,8 +217,7 @@ bool vm_unmap (uintptr_t root, uintptr_t address){
     if (!page_entry->present){
       return false;
     }
-    table_address = page_entry->address << 12;
-    table_ref = (page_entry_t*) ptov(table_address);
+    table_ref = (page_entry_t*) ptov(page_entry->address << 12);
   }
   // page_entry is now pointing to the page table entry (level 1)
   //Check to see if this page is taken
@@ -239,8 +235,7 @@ bool vm_unmap (uintptr_t root, uintptr_t address){
 bool vm_protect (uintptr_t root, uintptr_t address, bool user, bool writable, bool executable){
   uintptr_t page_index = address;
 
-  uintptr_t table_address = root;
-  page_entry_t* table_ref = (page_entry_t*) ptov(table_address);
+  page_entry_t* table_ref = (page_entry_t*) ptov(root);
   page_entry_t* page_entry;
 
   //Get us to the page table
@@ -250,8 +245,7 @@ bool vm_protect (uintptr_t root, uintptr_t address, bool user, bool writable, bo
     if (!page_entry->present){
       return false;
     }
-    table_address = page_entry->address << 12;
-    table_ref = (page_entry_t*) ptov(table_address);
+    table_ref = (page_entry_t*) ptov(page_entry->address << 12);
   }
   // page_entry is now pointing to the page table entry (level 1)
   // Check to see if this page is taken
@@ -296,27 +290,16 @@ void unmap_lower_half(uintptr_t root){
 
               // Yes. Free the physical page the holds the level 1 table
               pmem_free(l2_table[l2_index].address << 12);
-              //kprintf("l2 freed 0x%x\n",l2_table[l2_index].address << 12);
             }
           }
-          // Free the physical page that held the level 2 table
           
           pmem_free(l3_table[l3_index].address << 12);
-          //kprintf("l3 freed 0x%x\n",l3_table[l3_index].address << 12);
-          //halt();
         }
       }
-      //halt();
       
       // Free the physical page that held the level 3 table
       pmem_free(l4_table[l4_index].address << 12);
-      //kprintf("l4 freed 0x%x\n",l4_table[l4_index].address << 12);
     }
   }
-  //halt();
-  // Is this freeing what it should
-  // Why does it work with line 320 not 324
-  // Reload CR3 to flush any cached address translations
   write_cr3(read_cr3());
-  // halt();
 }

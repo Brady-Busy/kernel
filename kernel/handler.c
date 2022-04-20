@@ -1,10 +1,11 @@
 #include "handler.h"
 // interupt handler stuff
 
-// Create a non-shift dictionary
-char lower[241];
-char upper[241];
+// Create and initialize keyboard code array
+char lower[241] = {'\0'};
+char upper[241] = {'\0'};
 
+// List all printable keyboard chars
 char * dict = "1234567890"
               "-=\b\0qwerty"
               "uiop[]\n\0as"
@@ -12,29 +13,33 @@ char * dict = "1234567890"
               "\0\\zxcvbnm,"
               "./\0*\0 \0\0\0\0"
               "\0\0\0\0\0\0\0\0\0";
-char * shift_dict = "!@#$%^&*()_+\b\0QWERTYUIOP{}\n\0ASDFGHJKL:\"~\0|ZX"
-"CVBNM<>?\0*\0 \0\0\0\0\0\0\0\0\0\0\0\0\0";
+char * shift_dict = "!@#$%^&*()"
+                    "_+\b\0QWERTY"
+                    "UIOP{}\n\0AS"
+                    "DFGHJKL:\"~"
+                    "\0|ZXCVBNM<"
+                    ">?\0*\0 \0\0\0\0"
+                    "\0\0\0\0\0\0\0\0\0";
 
+// setting up cyclic buffer for getc and getline
 char key_buffer[128];
 int reader = 0;
 int writer = 0;
 volatile size_t length = 0;
 
+// global variable keep track of if shift is pressed
 int shift_pressed = 0;
 
-// Initialize all of the press
-// Scan code as access
+// Initialize all of the scan codes
 void init_scan_dict() {
-  // Set base elements
-  lower[1] = '\0';
-  upper[1] = '\0';
-
+  // only set for printable elements
   for (int i = 2; i < (5 * 16) + 6; i++) {
       lower[i] = dict[i-2];
       upper[i] = shift_dict[i-2];
   }
 }
 
+// interupt context struct used for handlers
 typedef struct interrupt_context {
   uintptr_t ip;
   uint64_t cs;
@@ -43,12 +48,7 @@ typedef struct interrupt_context {
   uint64_t ss;
 } __attribute__((packed)) interrupt_context_t;
 
-__attribute__((interrupt))
-void std_handler(interrupt_context_t* ctx) {
-  kprintf("Some error occured\n");
-  halt();
-}
-
+// setting up all the standard interupt handles based on ms mannual.
 __attribute__((interrupt))
 void divide_error_handler(interrupt_context_t* ctx) {
   kprintf("Error: Divide Error. See DIV and IDIV instructions\n");
@@ -127,6 +127,18 @@ void stack_segfault_handler (interrupt_context_t* ctx, unsigned long code) {
   halt();
 }
 
+// read_cr2() is used to get address of the page access that caused page fault
+uintptr_t read_cr2() {
+  uintptr_t value;
+  __asm__("mov %%cr2, %0" : "=r" (value));
+  return value;
+}
+__attribute__((interrupt))
+void page_fault_handler(interrupt_context_t* ctx, unsigned long code) {
+  kprintf("Error: Page fault. Code %d. Access failed with %p.\n", code, read_cr2());
+  halt();
+}
+
 __attribute__((interrupt))
 void general_protection_handler (interrupt_context_t* ctx, unsigned long code) {
   kprintf("Error: General Protection. Code: %d. Check any memory references or other protection checks\n", code);
@@ -169,63 +181,69 @@ void control_protection_handler (interrupt_context_t* ctx, unsigned long code) {
   halt();
 }
 
-
-uintptr_t read_cr2() {
-  uintptr_t value;
-  __asm__("mov %%cr2, %0" : "=r" (value));
-  return value;
-}
-__attribute__((interrupt))
-void page_fault_handler(interrupt_context_t* ctx, unsigned long code) {
-  kprintf("Page fault happened trying to access %p. Code: %d.\n", read_cr2(), code);
-  halt();
-}
-
 __attribute__((interrupt))
 void irq1_handler(interrupt_context_t* ctx) {
 
+  // Get the scan code
   int code = inb(0x60);
 
+  // Check if it is shift
   if (code == 42 || code == 54) {
     shift_pressed++;
+    outb(PIC1_COMMAND, PIC_EOI);
+    return;
   } else if (code == 170 || code == 182) {
     shift_pressed--;
+    outb(PIC1_COMMAND, PIC_EOI);
+    return;
   }
 
   if (shift_pressed) {
-    if (upper[code] && length < 128){
-        key_buffer[length++, writer++] = upper[code];
-        writer %= 128;
-        term_putchar(upper[code]);
-    } else if (!upper[code]){
-      //kprintf("%d",code);
+    if (upper[code] && length < 128) {
+      key_buffer[length++, writer++] = upper[code];
+      writer %= 128;
+      term_putchar(upper[code]);
+    } else if (!upper[code]) {
+      // reserved for implementing functional keys
+    } else {
+      // buffer full, \a didn't work, so just do nothing
     }
   } else {
-    if (lower[code] && length < 128){
-        key_buffer[length++, writer++] = lower[code];
-        writer %= 128;
-        term_putchar(lower[code]);
-    } else if (!lower[code]){
-      //kprintf("%d",code);
+    if (lower[code] && length < 128) {
+      key_buffer[length++, writer++] = lower[code];
+      writer %= 128;
+      term_putchar(lower[code]);
+    } else if (!lower[code]) {
+      // reserved for implementing functional keys
+    } else {
+      // buffer full, \a didn't work, so just do nothing
     }
   }
+
+  // allow another keyboard interrupt
   outb(PIC1_COMMAND, PIC_EOI);
 }
 
+// return next char in buffer
 char kgetc () {
   reader %= 128;
+  // if length is 0, wait
   while (!length);
+  // decrement length, then return what is at reader
   return length--, key_buffer[reader++];
 }
 
+// get capacity - 1 chars from buffer
 size_t kgets (char* output, size_t capacity) {
   size_t chars_read = 0;
   while (chars_read < capacity - 1) {
     char current = kgetc();
+    // if we reach new line, return what we have
     if (current == '\n') {
       output[chars_read] = '\0';
       return chars_read;
     } else if (current == '\b'){
+      // if backspace and there aren't any characters, scream
       if (!chars_read){
         kprintf("\a");
       } else{
@@ -278,9 +296,9 @@ void idt_set_handler(uint8_t index, void* fn, uint8_t type) {
   current->type = type;
 
   current->present = 1;
-  current->dpl = 3;
+  current->dpl = 3; // Allow users to evoke interrupts
   current->ist = 0;
-  current->selector = KERNEL_CODE_SELECTOR;//IDT_CODE_SELECTOR
+  current->selector = KERNEL_CODE_SELECTOR;
 }
 
 // This struct is used to load an IDT once we've set it up
@@ -288,8 +306,6 @@ typedef struct idt_record {
   uint16_t size;
   void* base;
 } __attribute__((packed)) idt_record_t;
-
-
 
 /**
  * Initialize an interrupt descriptor table, set handlers for standard exceptions, and install
@@ -325,14 +341,9 @@ void idt_setup() {
   idt_set_handler(19, simd_fp_handler, IDT_TYPE_INTERRUPT);
   idt_set_handler(20, virtualization_exception_handler, IDT_TYPE_INTERRUPT);
   idt_set_handler(21, control_protection_handler, IDT_TYPE_INTERRUPT);
-  // for (int i = 0; i < 21; i++) {
-  //   idt_set_handler (i, std_handler, IDT_TYPE_INTERRUPT);
-  // }
-
-  // Set up to handle PIC_1 (keyboard interrupt)
   idt_set_handler(IRQ1_INTERRUPT, irq1_handler, IDT_TYPE_INTERRUPT);
-
-  
+  // setting up system call
+  idt_set_handler(0x80, syscall_entry, IDT_TYPE_TRAP);
 
   // Step 3: Install the IDT
   idt_record_t record = {

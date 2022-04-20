@@ -7,7 +7,5 @@
 #include "port.h"
 #include "pic.h"
 
-
+// find a boot loader tag with given id
 void* find_tag(struct stivale2_struct* hdr, uint64_t id);
-
-int kstrcmp(const char* str1, const char* str2);

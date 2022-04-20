@@ -11,6 +11,7 @@
 #include "kprocess.h"
 #include <stdbool.h>
 
+
 // Reserve space for the stack
 static uint8_t stack[8192];
 
@@ -47,6 +48,7 @@ static struct stivale2_header stivale_hdr = {
   .tags = (uintptr_t)&terminal_hdr_tag
 };
 
+
 void _start(struct stivale2_struct* hdr) {
   // We've booted! Let's start processing tags passed to use from the bootloader
   fl_setup(hdr);
@@ -55,8 +57,8 @@ void _start(struct stivale2_struct* hdr) {
   idt_setup();
   pic_unmask_irq(1);
   term_init();
-  idt_set_handler(0x80, syscall_entry, IDT_TYPE_TRAP);
-  unmap_lower_half(read_cr3());  
+  unmap_lower_half(read_cr3());
+  // We start the shell in exec_setup()
   exec_setup(hdr);
   
 
