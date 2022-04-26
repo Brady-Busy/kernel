@@ -1,5 +1,5 @@
 #pragma once
-#include <stdlib.h>
+#include <stdint.h>
 // Inspiration taken from https://jhu-cs318.github.io/pintos-doxygen/html/annotated.html
 
 #define READY 0
