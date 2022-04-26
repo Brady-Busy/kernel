@@ -4,7 +4,7 @@
 // Test and set method for atomicity when checking locks
 int TAS(volatile int *addr, int newval) {
          int result = newval;
-         asm volatile("lock; xchg %0, %1"
+         __asm__ volatile("lock; xchg %0, %1"
                      : "+m" (*addr), "=r" (result)
                      : "1" (newval)
                      : "cc");
