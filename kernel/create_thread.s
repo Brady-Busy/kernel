@@ -1,10 +1,10 @@
-.global context
+.global create_thread
 
 # This function is called to issue a system call
 # Arguments are:
 #  function point
 
-context:
+create_thread:
 
   # Trigger the system call interrupt
   int $0x90

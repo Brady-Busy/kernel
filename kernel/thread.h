@@ -52,5 +52,5 @@ int thread_create(thread_t * memory, const char * name, uintptr_t func, void * a
 /** use this to create the context of the function it is in and pass it the thread it is switching to
  * fn is the thread to jump to
 */
-extern int context(thread_t fn);
+extern int create_thread(thread_t * memory, const char * name, uintptr_t func, void * args);
 extern void context_entry();
