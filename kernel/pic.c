@@ -54,6 +54,9 @@ void pic_init() {
   outb(PIC1_DATA, 0xFF);
   outb(PIC2_DATA, 0xFF);
 
+  // Unmask irq0 which is the timer interrupt
+  pic_unmask_irq(0);
+
   // Enable interrupts
   __asm__("sti");
 }

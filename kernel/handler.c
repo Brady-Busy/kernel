@@ -224,6 +224,16 @@ void irq1_handler(interrupt_context_t* ctx) {
   outb(PIC1_COMMAND, PIC_EOI);
 }
 
+
+__attribute__((interrupt))
+void irq0_handler(interrupt_context_t* ctx) {
+
+  kprintf("tick\n");
+
+  // allow another keyboard interrupt
+  outb(PIC1_COMMAND, PIC_EOI);
+}
+
 // return next char in buffer
 char kgetc () {
   reader %= 128;
@@ -341,6 +351,7 @@ void idt_setup() {
   idt_set_handler(19, simd_fp_handler, IDT_TYPE_INTERRUPT);
   idt_set_handler(20, virtualization_exception_handler, IDT_TYPE_INTERRUPT);
   idt_set_handler(21, control_protection_handler, IDT_TYPE_INTERRUPT);
+  idt_set_handler(IRQ0_INTERRUPT, irq0_handler, IDT_TYPE_INTERRUPT);
   idt_set_handler(IRQ1_INTERRUPT, irq1_handler, IDT_TYPE_INTERRUPT);
   // setting up system call
   idt_set_handler(0x80, syscall_entry, IDT_TYPE_TRAP);
