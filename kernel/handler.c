@@ -1,4 +1,5 @@
 #include "handler.h"
+#include "thread.h"
 // interupt handler stuff
 
 // Create and initialize keyboard code array
@@ -355,6 +356,7 @@ void idt_setup() {
   idt_set_handler(IRQ1_INTERRUPT, irq1_handler, IDT_TYPE_INTERRUPT);
   // setting up system call
   idt_set_handler(0x80, syscall_entry, IDT_TYPE_TRAP);
+   idt_set_handler(0x90, context_entry, IDT_TYPE_TRAP);
 
   // Step 3: Install the IDT
   idt_record_t record = {
