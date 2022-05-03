@@ -14,29 +14,32 @@ int thread_create(thread_t * memory, const char * name, uintptr_t func, void * a
 
 
 /** 
- * context is the context of the function we are leaving
- * somehow I will save it in the current running thread i.e the one we are leaving
- * this will be used if th euser causes an interupt and creates a new thread.
+ * context is the context of the function we are currently in
+ * we create a new thread not to jump to but save into global struct
+ * save its context same as its parent except for ip, argument, and sp
 */
 void context_handler(context_switch_t* context){
-
+    //check code selector
+    //change function to justr save the thread
     thread_t* m = (thread_t*)context->rdi;
     const char* n = (const char*)context->rsi;
     uintptr_t func = (uintptr_t) context->rdx;
     void* args = (void*)context->rcx;
     
-
-    //save context to current running thread here
-    thread_create(m, n, func, args);//??
-    context->ip = func;
-    context->rdi = args;
-    context->sp = m->stack;
+    thread_create(m, n, func, args);
     
-    m->contextSaved = context;
-    kprintf("hello thread\n");
+    //save context to current running thread here
+    memcpy(m->contextSaved, context, sizeof(context_switch_t));//they've the same process
+    m->contextSaved.ip = func;
+    m->contextSaved.rdi = args;
+    m->contextSaved.sp = m->stack;
+    // int id = save_thread();
+    // m->thread_id = id;
+    // context->rax = id;
+    //save m into the global struct
+   
+    // kprintf("hello from created thread with id: %d\n", id);
 }
 
 
-// void switch_thread(thread_t* from, thread_t* to){
-//     //save c
-// }
+

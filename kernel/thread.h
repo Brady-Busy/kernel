@@ -43,7 +43,7 @@ typedef struct {
     uint8_t *stack; 
     unsigned buffer;
     void * args; // arguments for the function
-    context_switch_t* contextSaved;
+    context_switch_t contextSaved;
 } thread_t;
 
 int thread_create(thread_t * memory, const char * name, uintptr_t func, void * args); 
