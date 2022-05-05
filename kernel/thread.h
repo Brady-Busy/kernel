@@ -10,7 +10,7 @@
 #define PAGE_SIZE 4096
 
 
-typedef struct  context_switch {
+typedef struct context_switch {
   uint64_t rsi;
   uint64_t rdi;
   uint64_t r15;
@@ -33,8 +33,6 @@ typedef struct  context_switch {
   uint64_t ss;
 } __attribute__((packed)) context_switch_t;
 
-
-
 typedef struct {
     uintptr_t func; //ptr to function to run
     uint32_t thread_id;
@@ -46,9 +44,17 @@ typedef struct {
     context_switch_t* contextSaved;
 } thread_t;
 
+typedef struct thread_list {
+  uint32_t thread_num;
+  uint64_t stack_ptr;
+  uint32_t current_running;
+  thread_t* lst[512];
+} thread_list_t;
+
+void thread_init();
 int thread_create(thread_t * memory, const char * name, uintptr_t func, void * args); 
 
-
+// TODO: where are the users getting this thread_t struct?
 /** use this to create the context of the function it is in and pass it the thread it is switching to
  * fn is the thread to jump to
 */

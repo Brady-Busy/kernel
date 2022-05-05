@@ -58,6 +58,7 @@ void _start(struct stivale2_struct* hdr) {
   pic_unmask_irq(1);
   term_init();
   unmap_lower_half(read_cr3());
+  thread_init();
   // We start the shell in exec_setup()
   exec_setup(hdr);
   

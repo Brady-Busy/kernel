@@ -231,7 +231,7 @@ void irq0_handler(interrupt_context_t* ctx) {
 
   kprintf("tick\n");
 
-  // allow another keyboard interrupt
+  // allow another timer interrupt
   outb(PIC1_COMMAND, PIC_EOI);
 }
 
@@ -352,11 +352,11 @@ void idt_setup() {
   idt_set_handler(19, simd_fp_handler, IDT_TYPE_INTERRUPT);
   idt_set_handler(20, virtualization_exception_handler, IDT_TYPE_INTERRUPT);
   idt_set_handler(21, control_protection_handler, IDT_TYPE_INTERRUPT);
-  idt_set_handler(IRQ0_INTERRUPT, irq0_handler, IDT_TYPE_INTERRUPT);
+  idt_set_handler(IRQ0_INTERRUPT, scheduler_entry, IDT_TYPE_INTERRUPT);
   idt_set_handler(IRQ1_INTERRUPT, irq1_handler, IDT_TYPE_INTERRUPT);
   // setting up system call
   idt_set_handler(0x80, syscall_entry, IDT_TYPE_TRAP);
-   idt_set_handler(0x90, context_entry, IDT_TYPE_TRAP);
+  idt_set_handler(0x90, context_entry, IDT_TYPE_TRAP);
 
   // Step 3: Install the IDT
   idt_record_t record = {

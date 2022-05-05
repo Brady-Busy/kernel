@@ -38,3 +38,5 @@ size_t kgets (char* output, size_t capacity);
 
 extern int syscall(uint64_t nr, ...);
 extern void syscall_entry();
+
+extern void scheduler_entry();
