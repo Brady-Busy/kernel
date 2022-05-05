@@ -41,7 +41,7 @@ typedef struct {
     uint8_t *stack; 
     unsigned buffer;
     void * args; // arguments for the function
-    context_switch_t* contextSaved;
+    context_switch_t contextSaved;
 } thread_t;
 
 typedef struct thread_list {
