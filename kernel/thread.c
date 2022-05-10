@@ -42,7 +42,7 @@ void context_handler(context_switch_t* context){
     void* args = (void*)context->rcx;
     kprintf("anything wrong?\n");
     
-    thread_create(m, n, func, args);
+    int id = thread_create(m, n, func, args);
     
     //save context to current running thread here
     memcpy(&m->contextSaved, context, sizeof(context_switch_t));//they've the same process
@@ -51,7 +51,7 @@ void context_handler(context_switch_t* context){
     m->contextSaved.sp = m->stack;
     // int id = save_thread();
     // m->thread_id = id;
-    // context->rax = id;
+    context->rax = id;
     //save m into the global struct
    
     // kprintf("hello from created thread with id: %d\n", id);
