@@ -184,7 +184,7 @@ void control_protection_handler (interrupt_context_t* ctx, unsigned long code) {
 
 __attribute__((interrupt))
 void irq1_handler(interrupt_context_t* ctx) {
-
+  kprintf("irq1\n");
   // Get the scan code
   int code = inb(0x60);
 

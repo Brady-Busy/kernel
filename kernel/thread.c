@@ -11,6 +11,7 @@ void thread_init(){
 }
 
 int thread_create(thread_t * memory, const char * name, uintptr_t func, void * args) {
+    kprintf("thread_create called\n");
     memory->func = func;
     memory->thread_id = global_thread.thread_num; // TODO update this so this is different for each thread
     memory->state = 0; // set to ready
@@ -59,9 +60,9 @@ void context_handler(context_switch_t* context){
 }
 
 thread_t * next_thread(){
-    while(!global_thread.lst[(++global_thread.current_running) % global_thread.thread_num] -> state){
-        global_thread.current_running = global_thread.current_running % global_thread.thread_num;
-    }
+    kprintf("%d %d\n", global_thread.current_running, global_thread.thread_num);
+    while(global_thread.lst[(++global_thread.current_running) % global_thread.thread_num] -> state);
+    global_thread.current_running = global_thread.current_running % global_thread.thread_num;
     return global_thread.lst[global_thread.current_running];
 }
 
@@ -70,21 +71,23 @@ void scheduler_handler(context_switch_t* context) {
     // turn off timer interrupt
     pic_mask_irq(0);
     if (global_thread.thread_num <= 1){
+        //kprintf("only child\n");
+        outb(PIC1_COMMAND, PIC_EOI);
+        pic_unmask_irq(0);
         return;
     }
+    kprintf("Z\n");
     context_switch_t * saves = &(global_thread.lst[global_thread.current_running] -> contextSaved);
     // save the instruction pointer and the stack
-    saves->ip = context->ip;
-    saves->sp = context->sp;
+    memcpy(saves, context, sizeof(context_switch_t));
+    kprintf("A\n");
 
     context_switch_t * next = &(next_thread()->contextSaved);
-    // swich to next context
-    context->ip  = next->ip;
-    context->sp = next->sp;
-
+    memcpy(context, next, sizeof(context_switch_t));
+    kprintf("B\n");
     // turn on timer interrupt again
     pic_unmask_irq(0);
-
+    outb(PIC1_COMMAND, PIC_EOI);
     return;
 }
 

@@ -1,6 +1,6 @@
 #include "mem.h"
 
-void memcpy(uintptr_t dest, uintptr_t src, uint64_t size) {
+void memcpy(uintptr_t dest, uintptr_t const src, uint64_t size) {
   //Cast dest and src to char ptrs to copy byte by byte
   char * dest_c = (char *) dest;
   char * src_c = (char *) src;
