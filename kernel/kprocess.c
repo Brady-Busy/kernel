@@ -74,10 +74,9 @@ bool kexec(struct stivale2_module elf_file) {
 
   kprintf("before create_thread\n");
   // Create entry for shell
-  thread_t init_context;
-  kprintf("init_context at %x\n",&init_context);
-  create_thread(&init_context, elf_file.string, elf_hdr->e_entry, NULL);
-   kprintf("after create_thread\n");
+  thread_t * init_context = kmalloc(sizeof(thread_t));
+  create_thread(init_context, elf_file.string, elf_hdr->e_entry, NULL);
+  kprintf("after create_thread\n");
 
   //And now jump to the entry point
   usermode_entry(USER_DATA_SELECTOR | 0x3,            // User data selector with priv=3

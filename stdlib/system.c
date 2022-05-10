@@ -17,7 +17,7 @@ void* mmap (uintptr_t address, int prot){
 // this malloc doesn't support allocating memory with more than a page
 void* malloc(size_t sz) {
   // Round sz up to a multiple of 16
-  sz = ROUND_UP(sz, PAGE_SIZE);
+  sz = ROUND_UP(sz, 16);
 
   // Do we have enough space to satisfy this allocation?
   if (space_remaining < sz) {
