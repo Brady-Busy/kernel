@@ -37,7 +37,7 @@ int atoi (const char * str) {
 }
 
 char * strcpy (char * dest, const char * src) {
-    while(src++ != NULL) {
+    while(*(src++) != '\0') {
         *dest++ = *src++;
     }
     return dest;

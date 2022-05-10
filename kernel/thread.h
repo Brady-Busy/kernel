@@ -1,5 +1,8 @@
 #pragma once
 #include <stdint.h>
+#include "pic.h"
+#include <string.h>
+#include "kmem.h"
 
 // Inspiration taken from https://jhu-cs318.github.io/pintos-doxygen/html/annotated.html
 

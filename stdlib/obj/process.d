@@ -1,15 +1,10 @@
-obj/process.o: process.c process.h ../kernel/kprocess.h \
-  ../kernel/terminal.h ../kernel/port.h ../kernel/kmem.h \
-  ../kernel/kprint.h
+obj/process.o: process.c process.h ../kernel/thread.h ../kernel/pic.h \
+  ../kernel/kprocess.h
 
 process.h:
 
+../kernel/thread.h:
+
+../kernel/pic.h:
+
 ../kernel/kprocess.h:
-
-../kernel/terminal.h:
-
-../kernel/port.h:
-
-../kernel/kmem.h:
-
-../kernel/kprint.h:

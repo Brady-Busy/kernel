@@ -10,6 +10,7 @@
 #include "elf.h"
 #include "gdt.h"
 #include "usermode_entry.h"
+#include "thread.h"
 #include <mem.h>
 #include <string.h>
 
