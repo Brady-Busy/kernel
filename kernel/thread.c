@@ -71,18 +71,23 @@ void scheduler_handler(context_switch_t* context) {
     // turn off timer interrupt
     pic_mask_irq(0);
     if (global_thread.thread_num <= 1){
-        //kprintf("only child\n");
+        // kprintf("only child\n");
         outb(PIC1_COMMAND, PIC_EOI);
         pic_unmask_irq(0);
         return;
     }
     kprintf("Z\n");
-    context_switch_t * saves = &(global_thread.lst[global_thread.current_running] -> contextSaved);
+    // context_switch_t * saves = &(global_thread.lst[global_thread.current_running] -> contextSaved);
     // save the instruction pointer and the stack
-    memcpy(saves, context, sizeof(context_switch_t));
+    memcpy(&(global_thread.lst[global_thread.current_running] -> contextSaved), context, sizeof(context_switch_t));
+    // (global_thread.lst[global_thread.current_running] -> contextSaved).sp = global_thread.lst[global_thread.current_running]->stack;
     kprintf("A\n");
 
+    //problem is when returning to starting thread. Might have something to do with the stack pointer
+
     context_switch_t * next = &(next_thread()->contextSaved);
+    kprintf("got next as %p\n", next->ip);
+    kprintf("leaving contxt at %p\n", context->ip);
     memcpy(context, next, sizeof(context_switch_t));
     kprintf("B\n");
     // turn on timer interrupt again

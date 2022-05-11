@@ -6,10 +6,17 @@
 #include <string.h>
 #include <system.h>
 
-void foo(){
-  while(1){printf("hi\n");}
+
+
+void take(){
+  while(1){printf("sup\n");}
 }
 
+void foo(){
+  thread_t* tar = malloc(sizeof(thread_t));
+  create_thread(tar, "take", take, NULL);
+  while(1){printf("hi\n");}
+}
 
 void _start() {
   printf("$\n");
