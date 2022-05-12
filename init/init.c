@@ -9,13 +9,18 @@
 
 
 void take(){
-  while(1){printf("sup\n");}
+  int a = 1;
+  while(1){
+    printf("%d\n", a);
+    a++;
+    }
 }
 
 void foo(){
   thread_t* tar = malloc(sizeof(thread_t));
   create_thread(tar, "take", take, NULL);
-  while(1){printf("hi\n");}
+  int b = 10000;
+  while(1){printf("%d\n",b);b++;}
 }
 
 void _start() {
@@ -27,6 +32,7 @@ void _start() {
   //exec(strtok(buf, " "), NULL);
   thread_t* bar = malloc(sizeof(thread_t));
   create_thread(bar, "foo", foo, NULL);
-  while(1){printf("#\n");}
+  int c = 100000;
+  while(1){printf("%c\n",c);c++;}
   exit(1);
 }

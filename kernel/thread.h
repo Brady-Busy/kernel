@@ -55,8 +55,7 @@ typedef struct thread_list {
 } thread_list_t;
 
 void thread_init();
-int thread_create(thread_t * memory, const char * name, uintptr_t func, void * args); 
-
+uint64_t thread_create(thread_t * memory, const char * name, uintptr_t func, void * args);
 // TODO: where are the users getting this thread_t struct?
 /** use this to create the context of the function it is in and pass it the thread it is switching to
  * fn is the thread to jump to

@@ -60,7 +60,7 @@ bool kexec(struct stivale2_module elf_file) {
      return false;
     }
   }
-
+  /*
   // Pick an arbitrary location and size for the user-mode stack
   uintptr_t user_stack = 0x70000000000;
 
@@ -71,16 +71,20 @@ bool kexec(struct stivale2_module elf_file) {
     // Map a page that is user-accessible, writable, but not executable
     vm_map(read_cr3() & 0xFFFFFFFFFFFFF000, p, true, true, false);
   }
+  */
 
   kprintf("before create_thread\n");
   // Create entry for shell
   thread_t * init_context = kmalloc(sizeof(thread_t));
-  thread_create(init_context, elf_file.string, elf_hdr->e_entry, NULL);
-  kprintf("after create_thread\n");
+  uint64_t user_stack = thread_create(init_context, elf_file.string, elf_hdr->e_entry, NULL);
+  kprintf("after create_thread, stack is %x\n", user_stack);
+
+  // Unmask irq0 which is the timer interrupt
+  pic_unmask_irq(0);
 
   //And now jump to the entry point
   usermode_entry(USER_DATA_SELECTOR | 0x3,            // User data selector with priv=3
-                  user_stack + user_stack_size - 8,   // Stack starts at the high address minus 8 bytes
+                  user_stack,   // Stack starts at the high address minus 8 bytes
                   USER_CODE_SELECTOR | 0x3,           // User code selector with priv=3
                   elf_hdr->e_entry);                     // Jump to the entry point specified in the ELF file
 
