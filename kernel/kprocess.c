@@ -171,20 +171,28 @@ int sys_getline (uintptr_t buffer, size_t sz, uintptr_t fd) {
 
 // call corresponding system calls
 int syscall_handler(uint64_t nr, uint64_t arg0, uint64_t arg1, uint64_t arg2, uint64_t arg3, uint64_t arg4, uint64_t arg5) {
+  pic_mask_irq(1);
   switch (nr) {
     case 0:
+      pic_unmask_irq(1);
       return sys_read(arg0, arg1, arg2);
     case 1:
+      pic_unmask_irq(1);
       return sys_write(arg0, arg1, arg2);
     case 2:
+      pic_unmask_irq(1);
       return sys_exec(arg0, arg1);
     case 3:
+      pic_unmask_irq(1);
       return sys_exit(arg0);
     case 4:
+      pic_unmask_irq(1);
       return sys_mmap(arg0, arg1, arg2);
     case 5:
+      pic_unmask_irq(1);
       return sys_getline(arg0, arg1, arg2);
     default:
+      pic_unmask_irq(1);
       return -1;
   }
 }

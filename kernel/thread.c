@@ -39,6 +39,8 @@ uint64_t thread_create(thread_t * memory, const char * name, uintptr_t func, voi
  * save its context same as its parent except for ip, argument, and sp
 */
 void context_handler(context_switch_t* context){
+    pic_mask_irq(0);
+
     //check code selector
     //change function to justr save the thread
     thread_t* m = (thread_t*)context->rdi;
@@ -62,6 +64,7 @@ void context_handler(context_switch_t* context){
    
     // kprintf("hello from created thread with id: %d\n", id);
     kprintf("after context handler\n");
+    pic_unmask_irq(0);
 }
 
 thread_t * next_thread(){

@@ -136,7 +136,7 @@ uintptr_t read_cr2() {
 }
 __attribute__((interrupt))
 void page_fault_handler(interrupt_context_t* ctx, unsigned long code) {
-  kprintf("Error: Page fault. Code %d. Access failed with %p.\n", code, read_cr2());
+  kprintf("Error: Page fault. Code %d. Access failed with %p. at %p\n", code, read_cr2(), ctx->ip);
   halt();
 }
 
