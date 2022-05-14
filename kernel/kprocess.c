@@ -80,6 +80,7 @@ bool kexec(struct stivale2_module elf_file) {
   kprintf("after create_thread, stack is %x\n", user_stack);
 
   // Unmask irq0 which is the timer interrupt
+  outb(PIC1_COMMAND, PIC_EOI);
   pic_unmask_irq(0);
 
   //And now jump to the entry point
@@ -94,6 +95,8 @@ bool kexec(struct stivale2_module elf_file) {
 // system call to read from standard input
 int sys_read (int fd, char const *buf, int size){
   if (fd != 0){
+    pic_unmask_irq(0);
+    outb(PIC1_COMMAND, PIC_EOI);
     return -1;
   }
   return kgets (buf, size);
@@ -108,11 +111,15 @@ int sys_write (int fd, const char *buf, int size){
   while (counter < size){
     char current = *buf++;
     if (!current){
+      pic_unmask_irq(0);
+      outb(PIC1_COMMAND, PIC_EOI);
       return counter;
     }
     kprint_c(current);
     counter++;
   }
+  pic_unmask_irq(0);
+  outb(PIC1_COMMAND, PIC_EOI);
   return size;
 }
 
@@ -128,16 +135,22 @@ int sys_exec (const char *program, const char *argv[]){
   }
   kprintf("program %s not found\n", program);
   kexec(*shell_module);
+  pic_unmask_irq(0);
+  outb(PIC1_COMMAND, PIC_EOI);
   return 0;
 }
 
 // start shell program
 int sys_exit (int e_code){
-  switch (e_code){
+  /*switch (e_code){
     default: // reserved for exit code
       break;
   }
   kexec(*shell_module);
+  */
+  end_current();
+  pic_unmask_irq(0);
+  outb(PIC1_COMMAND, PIC_EOI);
   return 0;
 }
 
@@ -152,15 +165,22 @@ int sys_mmap (uintptr_t address, uintptr_t free_ptr, int prot){
     virtual_fl += PAGE_SIZE;
     if (!vm_map(read_cr3() & (~0xFFF), *(uintptr_t*)free_ptr, true, (prot >> 1) & 1, prot & 1)){
       kprintf("Map failed with %x\n", *(uintptr_t*)free_ptr);
+      pic_unmask_irq(0);
+      outb(PIC1_COMMAND, PIC_EOI);
       return 0;
     }
+    
   } else {
     // if address is given, map that address, free_ptr could be passed as NULL
     if (!vm_map(read_cr3() & (~0xFFF), address, true, (prot >> 1) & 1, prot & 1)){
       kprintf("Map failed\n");
+      outb(PIC1_COMMAND, PIC_EOI);
+      pic_unmask_irq(0);
       return 0;
     }
   }
+  outb(PIC1_COMMAND, PIC_EOI);
+  pic_unmask_irq(0);
   return 1;
 }
 
@@ -171,28 +191,22 @@ int sys_getline (uintptr_t buffer, size_t sz, uintptr_t fd) {
 
 // call corresponding system calls
 int syscall_handler(uint64_t nr, uint64_t arg0, uint64_t arg1, uint64_t arg2, uint64_t arg3, uint64_t arg4, uint64_t arg5) {
-  pic_mask_irq(1);
+  pic_mask_irq(0);
   switch (nr) {
     case 0:
-      pic_unmask_irq(1);
       return sys_read(arg0, arg1, arg2);
     case 1:
-      pic_unmask_irq(1);
       return sys_write(arg0, arg1, arg2);
     case 2:
-      pic_unmask_irq(1);
       return sys_exec(arg0, arg1);
     case 3:
-      pic_unmask_irq(1);
       return sys_exit(arg0);
     case 4:
-      pic_unmask_irq(1);
       return sys_mmap(arg0, arg1, arg2);
     case 5:
-      pic_unmask_irq(1);
       return sys_getline(arg0, arg1, arg2);
     default:
-      pic_unmask_irq(1);
+      pic_unmask_irq(0);
       return -1;
   }
 }

@@ -62,3 +62,5 @@ uint64_t thread_create(thread_t * memory, const char * name, uintptr_t func, voi
 */
 extern int create_thread(thread_t * memory, const char * name, uintptr_t func, void * args);
 extern void context_entry();
+
+void end_current();

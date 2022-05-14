@@ -57,8 +57,7 @@ void context_handler(context_switch_t* context){
     m->contextSaved.ip = func;
     m->contextSaved.rdi = args;
     m->contextSaved.sp = m->stack;
-    // int id = save_thread();
-    // m->thread_id = id;
+    
     context->rax = id;
     //save m into the global struct
    
@@ -68,46 +67,64 @@ void context_handler(context_switch_t* context){
 }
 
 thread_t * next_thread(){
-    kprintf("%d %d\n", global_thread.current_running, global_thread.thread_num);
+    // kprintf("%d %d\n", global_thread.current_running, global_thread.thread_num);
     while(global_thread.lst[(++global_thread.current_running) % global_thread.thread_num] -> state);
     global_thread.current_running = global_thread.current_running % global_thread.thread_num;
-    if (global_thread.current_running == 0) {kprintf("first thread\n");}
+    // if (global_thread.current_running == 0) {kprintf("first thread\n");}
     return global_thread.lst[global_thread.current_running];
 }
 
 int total_switch = 0;
 
 void scheduler_handler(context_switch_t* context) {
-    kprintf("in handler\n");
+    // if(total_switch == 3){
+    //     kprintf("three times");
+    //     outb(PIC1_COMMAND, PIC_EOI);
+    //     return;
+    // }
+    //kprintf("in handler\n");
     // turn off timer interrupt
     pic_mask_irq(0);
+    uint64_t hold = context->ip;
+    //kprintf("here %x\n", context->ip);
+    if(hold >> 63){
+        outb(PIC1_COMMAND, PIC_EOI);
+        pic_unmask_irq(0);
+        return;
+    }
     if (global_thread.thread_num <= 1){
         // kprintf("only child\n");
         outb(PIC1_COMMAND, PIC_EOI);
         pic_unmask_irq(0);
         return;
     }
-    kprintf("Z\n");
+
+    context_switch_t * next = &(next_thread()->contextSaved);
+    //if (next == &(global_thread.lst[global_thread.current_running] -> contextSaved)){
+      //  return;
+    //}
+
+    // kprintf("Z\n");
     // context_switch_t * saves = &(global_thread.lst[global_thread.current_running] -> contextSaved);
     // save the instruction pointer and the stack
     memcpy(&(global_thread.lst[global_thread.current_running] -> contextSaved), context, sizeof(context_switch_t));
     // (global_thread.lst[global_thread.current_running] -> contextSaved).sp = global_thread.lst[global_thread.current_running]->stack;
-    kprintf("A\n");
+    // kprintf("A\n");
 
-    //problem is when returning to starting thread. Might have something to do with the stack pointer
-
-    context_switch_t * next = &(next_thread()->contextSaved);
-    kprintf("got next as %p\n", next->ip);
-    kprintf("leaving contxt at %p\n", context->ip);
-    kprintf("accessing stack at %p\n", context->sp);
-    kprintf("switched %d times\n", total_switch++);
+    //kprintf("got next as %p\n", next->ip);
+    //kprintf("leaving contxt at %p\n", context->ip);
+    //kprintf("accessing stack at %p\n", context->sp);
+    //kprintf("switched %d times\n", total_switch++);
     memcpy(context, next, sizeof(context_switch_t));
-    kprintf("B\n");
+    // kprintf("B\n");
+    total_switch++;
     // turn on timer interrupt again
     pic_unmask_irq(0);
     outb(PIC1_COMMAND, PIC_EOI);
     return;
 }
 
-
+void end_current(){
+    global_thread.lst[global_thread.current_running]->state = 1;
+}
 
