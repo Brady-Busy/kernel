@@ -136,7 +136,7 @@ uintptr_t read_cr2() {
 }
 __attribute__((interrupt))
 void page_fault_handler(interrupt_context_t* ctx, unsigned long code) {
-  kprintf("Error: Page fault. Code %d. Access failed with %p.\n", code, read_cr2());
+  kprintf("Error: Page fault. Code %d. Access failed with %p. at %p\n", code, read_cr2(), ctx->ip);
   halt();
 }
 
@@ -252,6 +252,8 @@ size_t kgets (char* output, size_t capacity) {
     // if we reach new line, return what we have
     if (current == '\n') {
       output[chars_read] = '\0';
+      pic_unmask_irq(0);
+      outb(PIC1_COMMAND, PIC_EOI);
       return chars_read;
     } else if (current == '\b'){
       // if backspace and there aren't any characters, scream
@@ -265,6 +267,8 @@ size_t kgets (char* output, size_t capacity) {
     }
   }
   output[chars_read] = '\0';
+  pic_unmask_irq(0);
+  outb(PIC1_COMMAND, PIC_EOI);
   return chars_read;
 }
 
