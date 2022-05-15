@@ -11,8 +11,8 @@
 void take(){
   int a = 1;
   while(1){
-    printf("%d\n", a);
-    a++;
+    /*printf("%d\n", a);
+    a++;*/
     }
 }
 
@@ -20,7 +20,7 @@ void foo(){
   thread_t* tar = malloc(sizeof(thread_t));
   create_thread(tar, "take", take, NULL);
   int b = 10000;
-  while(1){printf("%d\n",b);b++;}
+  while(1){/*printf("%d\n",b);b++;*/}
 }
 
 void _start() {
@@ -33,6 +33,6 @@ void _start() {
   thread_t* bar = malloc(sizeof(thread_t));
   create_thread(bar, "foo", foo, NULL);
   int c = 100000;
-  while(1){printf("%c\n",c);c++;}
+  while(1){/*printf("%c\n",c);c++;*/}
   exit(1);
 }

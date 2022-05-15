@@ -16,7 +16,7 @@ uint64_t thread_create(thread_t * memory, const char * name, uintptr_t func, voi
     memory->state = 0; // set to ready
     strcpy(&memory->name, name);
     // map 8 page stack
-    for(int i = 0; i < 32; i++) {
+    for(int i = 0; i < 4; i++) {
         // Map a page that is user-accessible, writable, but not executable
         vm_map(read_cr3() & 0xFFFFFFFFFFFFF000, global_thread.stack_ptr, 1, 1, 0);
         global_thread.stack_ptr += PAGE_SIZE;
