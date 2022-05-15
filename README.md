@@ -12,6 +12,7 @@ We will list functionalities of our basic kernel below:
 * Loading and running executable (elf)
 * stdlib
 * Change to usermode
+* Multi-tasking via threads
 
 ## Acknowledgements
 The starter code is provided by professor Charlie Curtsinger, references for starter code is listed below.
