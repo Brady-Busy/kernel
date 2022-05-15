@@ -67,9 +67,13 @@ void context_handler(context_switch_t* context){
 }
 
 thread_t * next_thread(){
+    int cursor = global_thread.current_running;
     // kprintf("%d %d\n", global_thread.current_running, global_thread.thread_num);
-    while(global_thread.lst[(++global_thread.current_running) % global_thread.thread_num] -> state);
-    global_thread.current_running = global_thread.current_running % global_thread.thread_num;
+    while(global_thread.lst[(++cursor) % global_thread.thread_num] -> state);
+    if (global_thread.current_running == cursor % global_thread.thread_num){
+        return NULL;
+    }
+    global_thread.current_running = cursor % global_thread.thread_num;
     // if (global_thread.current_running == 0) {kprintf("first thread\n");}
     return global_thread.lst[global_thread.current_running];
 }
@@ -99,10 +103,7 @@ void scheduler_handler(context_switch_t* context) {
         return;
     }
 
-    context_switch_t * next = &(next_thread()->contextSaved);
-    //if (next == &(global_thread.lst[global_thread.current_running] -> contextSaved)){
-      //  return;
-    //}
+    
 
     // kprintf("Z\n");
     // context_switch_t * saves = &(global_thread.lst[global_thread.current_running] -> contextSaved);
@@ -110,7 +111,12 @@ void scheduler_handler(context_switch_t* context) {
     memcpy(&(global_thread.lst[global_thread.current_running] -> contextSaved), context, sizeof(context_switch_t));
     // (global_thread.lst[global_thread.current_running] -> contextSaved).sp = global_thread.lst[global_thread.current_running]->stack;
     // kprintf("A\n");
-
+    context_switch_t * next = &(next_thread()->contextSaved);
+    if (next == NULL){
+        outb(PIC1_COMMAND, PIC_EOI);
+        pic_unmask_irq(0);
+        return;
+    }
     //kprintf("got next as %p\n", next->ip);
     //kprintf("leaving contxt at %p\n", context->ip);
     //kprintf("accessing stack at %p\n", context->sp);

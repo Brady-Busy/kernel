@@ -57,10 +57,15 @@ void _start() {
   thread_t* bar = malloc(sizeof(thread_t));
   create_thread(bar, "foo", foo, NULL);
   int c = 1;
+  for (int i= 0; i < 2000000000; i++);
   /*while(1){if(!c%1000){printf("%d, %p\n",c, foo);}c++;}*/
   printf("we are in main\n");
-  for(int i = 0; i < 9000000000; i++){
-    for(int j = 0; j < 1000000000; j++);
+  for(int i = 0; i < 900; i++){
+    for(int j = 0; j < 100000; j++){
+      if (j == 999&& i % 100 == 0){
+        printf("%d\n",i);
+      }
+    }
   }
     
   printf("finished main\n");
