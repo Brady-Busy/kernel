@@ -14,8 +14,23 @@ We will list functionalities of our basic kernel below:
 * Change to usermode
 * Multi-tasking via threads
 
+## Running Our Project & Interpreting Its Output
+
+To run our project, use the command 'make run' in the command line.
+
+Internally, multiple threads are created. This is represented as:
+* The message "thread_create called" indicates that a program has created a thread. 
+* Upon entering a thread, "got to __threadname__" is printed
+* Finally, upon finishing the thread "finished __threadname__" is printed
+
+In our demo, the main thread is created first (see "we are in main"). Then, the foo thread is created and finished (this is followed by take, another thread that is created and finished). Finally, main finishes.
+
+This represents multi-tasking as the main function is started first, but finished last and therefore the processor switched to work on the foo and take threads before switching back to main
+
 ## Acknowledgements
 The starter code is provided by professor Charlie Curtsinger, references for starter code is listed below.
+
+The basic kernel implementation was completed by Brady Zheng and Noah Fehr. Multi-tasking was completed by Jemzy Alabi, Noah Fehr, Brady Zheng and Mack Trachtenberg.
 
 The starter code is based on the following example projects:
 - [OSDev.org Bare Bones Kernel](https://wiki.osdev.org/Bare_bones)
