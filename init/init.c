@@ -8,7 +8,7 @@
 
 char change[] = "aaa";
 
-//char* testFile= "A sunny day, a cold day, not sure how the day's weather will turn out. It seems I can never be dressed right need to sleep need to get this demo to WORK AHHHHHH. Ok hopefully get reaal shit done";
+char* testFile= "A sunny day, a cold day, not sure how the day's weather will turn out. It seems I can never be dressed right need to sleep need to get this demo to WORK AHHHHHH. Ok hopefully get reaal shit done";
 
 //l
 int letterSma = 0;
@@ -74,7 +74,7 @@ void foo(char* count){
   printf("got to foo\n");
   while(1){/*if(b%1000 == 1){printf("%d\n",b);}b++;}*/
   thread_t* tar = malloc(sizeof(thread_t));
-  create_thread(tar, "take", take, count);
+  create_thread(tar, "take", take, testFile);
   
 
 
@@ -118,13 +118,13 @@ void _start() {
   // exec the specified file from the user
   // exec will handle invalid file names internally
   //exec(strtok(buf, " "), NULL);
-  char * testFile = "A sunny day, a cold day, not sure how the day's weather will turn out. It seems I can never be dressed right need to sleep need to get this demo to WORK AHHHHHH. Ok hopefully get reaal shit done";
-  printf("%d\n",strlen(testFile)+1);
-  char * test = malloc (strlen(testFile)+1);
+  char * testFile2 = "A sunny day, a cold day, not sure how the day's weather will turn out.It seems I can never be dressed right need to sleep need to get this demo to WORK AHHHHHH. Ok hopefully get reaal shit done";
+  printf("%d\n",strlen(testFile2)+1);
+  // char * test = malloc (strlen(testFile2)+1);
   //strcpy(test, testFile);
-  printf("%s\n", testFile);
+  printf("%s\n", testFile2);
   thread_t* bar = malloc(sizeof(thread_t));
-  create_thread(bar, "foo", foo, test);
+  create_thread(bar, "foo", foo, testFile2);
   int c = 1;
   for (int i= 0; i < 2000000000; i++);
   /*while(1){if(!c%1000){printf("%d, %p\n",c, foo);}c++;}*/

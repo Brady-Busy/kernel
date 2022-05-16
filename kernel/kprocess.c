@@ -1,5 +1,7 @@
 #include "kprocess.h"
 
+
+#define PAGESIZE 0x1000
 // Number of modules
 uint64_t module_count;
 
@@ -14,7 +16,7 @@ bool kexec(struct stivale2_module elf_file) {
 
   // Cast the beginning of the elf_file to and elf header
   Elf64_Ehdr * elf_hdr = (Elf64_Ehdr *) elf_file.begin;
-
+  uint64_t fileMod = elf_file.begin;
   // Check to confirm that this is executable
   if (elf_hdr->e_type != 2) {
     kprintf("%s is not executable\n", elf_file.string);
@@ -44,6 +46,43 @@ bool kexec(struct stivale2_module elf_file) {
       kprintf("File permission denied (RWE or WE)\n");
       return false;
     }
+
+
+    // if(program_hdr->p_memsz > PAGESIZE){
+    //   int num = program_hdr->p_memsz / PAGESIZE;
+    //   if(program_hdr->p_memsz%PAGESIZE != 0) {
+    //       num += 1;
+    //   }
+    //   uint64_t start = program_hdr->p_vaddr;
+    //   uintptr_t cop = fileMod + program_hdr->p_offset;
+    //   size_t total = program_hdr->p_memsz;
+    //   for(int i = 0; i<num; i++){
+    //       vm_map(root, start, false, true, false);
+    //       size_t amount = PAGESIZE;
+    //       if(total >= amount){
+    //           memcpy(start, cop, amount);
+    //           total -= amount;
+    //       }
+    //       else{
+    //           memcpy(start, cop, total);
+    //       }
+    //       start += PAGESIZE;
+    //       cop += PAGESIZE;
+    //   } 
+    // }
+    // else{ // Otherwise file is less than a page size
+    //   bool mapcheck = vm_map(root, program_hdr->p_vaddr, false, true, false);
+    //   // if vm_map worked
+    //   if (mapcheck){
+    //       const uintptr_t* cop = fileMod + program_hdr->p_offset;
+    //       memcpy(program_hdr->p_vaddr, cop, program_hdr->p_memsz);
+    //       // Copy memory into the newly mapped page
+    //   }else{
+    //       kprintf("error error!! vm_map failed\n");
+    //   }
+        
+    // }
+
 
     // Call vm_map to map memory
     if (!vm_map(root, virtual_add, false, true, false)) {

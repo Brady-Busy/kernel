@@ -7,6 +7,7 @@ extern int syscall(uint64_t nr, ...);
 
 void* bump = NULL;
 size_t space_remaining = 0;
+// int try = 123;
 
 void* mmap (uintptr_t address, int prot){
   uintptr_t next_free = NULL;
