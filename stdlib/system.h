@@ -5,6 +5,7 @@
 #include <stddef.h>
 #include <stdbool.h>
 #include "../kernel/handler.h"
+#include "../kernel/pic.h"
 
 // Given an address and the protections
 // If address is not NULL, mmap will attempt to map it. If address NULL, mmap will assign a virtual address

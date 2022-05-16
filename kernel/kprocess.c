@@ -80,8 +80,8 @@ bool kexec(struct stivale2_module elf_file) {
   kprintf("after create_thread, stack is %x\n", user_stack);
 
   // Unmask irq0 which is the timer interrupt
-  outb(PIC1_COMMAND, PIC_EOI);
-  pic_unmask_irq(0);
+  //outb(PIC1_COMMAND, PIC_EOI);
+  pic_mask_irq(0);
 
   //And now jump to the entry point
   usermode_entry(USER_DATA_SELECTOR | 0x3,            // User data selector with priv=3

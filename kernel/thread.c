@@ -60,6 +60,7 @@ void context_handler(context_switch_t* context){
     //save m into the global struct
 
     kprintf("after context handler\n");
+    outb(PIC1_COMMAND, PIC_EOI);
     pic_unmask_irq(0);
 }
 
