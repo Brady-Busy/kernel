@@ -9,7 +9,7 @@
 #  syscall arg3 (in %r8)
 #  syscall arg4 (in %r9)
 #  syscall arg5 (at 0x8(%rsp))
-syscall:
+syscall:  
   # Pull argument 5 up into %rax
   mov 0x8(%rsp), %rax
 

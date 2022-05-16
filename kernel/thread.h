@@ -12,7 +12,11 @@
 #define DYING 3
 #define PAGE_SIZE 4096
 
-
+/*
+ * context_switch structure
+ * This struct stores the registers as well as the instruction pointer, code selector, flags etc
+ * In other words, it contains the necessary information to store the context of a thread
+*/
 typedef struct context_switch {
   uint64_t rsi;
   uint64_t rdi;
@@ -36,17 +40,27 @@ typedef struct context_switch {
   uint64_t ss;
 } __attribute__((packed)) context_switch_t;
 
-typedef struct {
+/*
+ * thread structure
+ * This struct stores the function pointer, state, thread id, name, stack pointer, buffer, function arguments and context of a thread
+ * Note: this was modeled roughly after the pthread_t struct
+*/
+typedef struct thread {
     uintptr_t func; //ptr to function to run
     uint32_t thread_id;
     uint8_t state; // running, waiting, ready, dying
     char name[8]; 
     uint8_t *stack; 
-    unsigned buffer;
+    unsigned buffer; // future implementations can create a buffer as a safeguard against overwriting
     void * args; // arguments for the function
     context_switch_t contextSaved;
 } thread_t;
 
+/*
+ * thread_list structure
+ * This struct contains the necessary information about a list of threads
+ * This includes to number of threads, the pointer to where all thread stacks are located, the current running thread and an array of all threads. 
+*/
 typedef struct thread_list {
   uint32_t thread_num;
   uint64_t stack_ptr;
@@ -54,13 +68,40 @@ typedef struct thread_list {
   thread_t* lst[512];
 } thread_list_t;
 
+/*
+ * thread_init function
+ * This function takes no arguments and initializes our global thread_list struct so that we are ready for users to create threads
+*/
 void thread_init();
+
+/*
+ * thread_create function
+ * This function creates a thread internally
+ * Arguments: a pointer to a space in memory for the thread struct, the name for the thread, a pointer to the function the new thread should run and a pointer to the arguments for that function
+ * Returns: a uint64_t pointer to the stack of that thread
+*/
 uint64_t thread_create(thread_t * memory, const char * name, uintptr_t func, void * args);
-// TODO: where are the users getting this thread_t struct?
-/** use this to create the context of the function it is in and pass it the thread it is switching to
- * fn is the thread to jump to
+
+/*
+ * create_thread function
+ * This function creates a thread specified by the user
+ * Arguments: a pointer to a space in memory for the thread struct, the name for the thread, a pointer to the function the new thread should run and a pointer to the arguments for that function
+ * Returns: thread_id
 */
 extern int create_thread(thread_t * memory, const char * name, uintptr_t func, void * args);
+
+/*
+ * context_entry function
+ * This function is an interrupt entry that invokes a system call, updates the registers and invokes the context_handler
+ * Arguments: None
+ * Returns: None
+*/
 extern void context_entry();
 
+/*
+ * end_current function
+ * This function marks a thread as "done"
+ * Arguments: none (updates the current thread that is stored in the global struct)
+ * Returns: thread_id
+*/
 void end_current();

@@ -12,7 +12,7 @@ uint64_t thread_create(thread_t * memory, const char * name, uintptr_t func, voi
     pic_mask_irq(0);
     kprintf("thread_create called\n");
     memory->func = func;
-    memory->thread_id = global_thread.thread_num; // TODO update this so this is different for each thread
+    memory->thread_id = global_thread.thread_num;
     memory->state = 0; // set to ready
     strcpy(&memory->name, name);
     // map 8 page stack
@@ -23,25 +23,23 @@ uint64_t thread_create(thread_t * memory, const char * name, uintptr_t func, voi
     }
     // stack starts at higher address of the mapped stack - 8
     memory->stack = global_thread.stack_ptr - 8;
-    memory->buffer = 0; // TODO ask Charlie
+    memory->buffer = 0; // Set as a default. Future implementations can build upon this
     memory->args = args;
-    // TODO add to task queue
     global_thread.lst[global_thread.thread_num++] = memory;
     // Unmask irq0 which is the timer interrupt
     pic_unmask_irq(0);
-    return memory->stack; // TODO change to where stored and returned locally
+    return memory->stack;
 }
 
 
 /** 
  * context is the context of the function we are currently in
- * we create a new thread not to jump to but save into global struct
+ * we create a new thread and save it into the global struct
  * save its context same as its parent except for ip, argument, and sp
 */
 void context_handler(context_switch_t* context){
     pic_mask_irq(0);
 
-    //check code selector
     //change function to justr save the thread
     thread_t* m = (thread_t*)context->rdi;
     const char* n = (const char*)context->rsi;
@@ -60,21 +58,27 @@ void context_handler(context_switch_t* context){
     
     context->rax = id;
     //save m into the global struct
-   
-    // kprintf("hello from created thread with id: %d\n", id);
+
     kprintf("after context handler\n");
     pic_unmask_irq(0);
 }
 
+/** 
+ * next_thread returns a pointer to the next thread to be run
+*/
 thread_t * next_thread(){
     int cursor = global_thread.current_running;
-    // kprintf("%d %d\n", global_thread.current_running, global_thread.thread_num);
+
+    // Check for next available thread
     while(global_thread.lst[(++cursor) % global_thread.thread_num] -> state);
+
+    // If the next available thread is the current thread (there are no other ready threads), return NULL
     if (global_thread.current_running == cursor % global_thread.thread_num){
         return NULL;
     }
+
+    //Update current thread in the global struct and return
     global_thread.current_running = cursor % global_thread.thread_num;
-    // if (global_thread.current_running == 0) {kprintf("first thread\n");}
     return global_thread.lst[global_thread.current_running];
 }
 
