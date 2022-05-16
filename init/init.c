@@ -6,9 +6,17 @@
 #include <string.h>
 #include <system.h>
 
+char change[3] = "aaa";
 
+char* testFile= "A sunny day, a cold day, not sure how the day's weather will turn out. It seems I can never be dressed right need to sleep need to get this demo to WORK AHHHHHH. Ok hopefully get reaal shit done";
 
-void take(){
+//l
+int letterSma = 0;
+int letterBig = 0;
+size_t letter_counts[26] = {0};
+size_t letter_countsB[26] = {0};
+
+void take(char* xtr){
   /*
   int a = 1;
   printf("got to take\n");
@@ -23,12 +31,41 @@ void take(){
   for(int c = 0; c < 10; c++){
     for(int d = 0; d < 1000; d++);
   }
-    
+  
+  for (int i= 0; i < 2000000000; i++);
+
+
+  for(int x = 0; x < strlen(xtr); x++){
+    if (xtr[x] >= 'A' && xtr[x] <= 'Z') {
+      letterBig++;
+    }
+  }
+  printf("counted a total of %d Big letters\n", letterBig);
+  printf("now breakdown\n");
+  char ch = 'A';
+  for (int x = 0; x < strlen(xtr); x++){
+    if (xtr[x] >= 'A' && xtr[x] <= 'Z') {
+      letter_countsB[xtr[x] - 'A']++;
+    }
+  }
+  
+  for(int j = 0; j<26; j++){
+    if(letter_countsB[j] == 0){
+      ch++;
+    }
+    else{
+      printf("%c: %d\n", ch, letter_countsB[j]);
+      ch++;
+    }
+  }
+  
+
   printf("finished take\n");
   while(1);
+  
 }
 
-void foo(){
+void foo(char* count){
   printf("got to foo\n");
   /*
   thread_t* tar = malloc(sizeof(thread_t));
@@ -37,12 +74,39 @@ void foo(){
   printf("got to foo\n");
   while(1){/*if(b%1000 == 1){printf("%d\n",b);}b++;}*/
   thread_t* tar = malloc(sizeof(thread_t));
-  create_thread(tar, "take", take, NULL);
+  create_thread(tar, "take", take, testFile);
   
+
+
+  for (int i= 0; i < 2000000000; i++);
+
   for(int a = 0; a < 50; a++){
     for(int b = 0; b < 1000; b++);
   }
-    
+  for(int x = 0; x < strlen(count); x++){
+    if (count[x] >= 'a' && count[x] <= 'z') {
+      letterSma++;
+    }
+  }
+  printf("counted a total of %d small letters\n", letterSma);
+  printf("now breakdown\n");
+  char ch = 'a';
+  for (int x = 0; x < strlen(count); x++){
+    if (count[x] >= 'a' && count[x] <= 'z') {
+      letter_counts[count[x] - 'a']++;
+    }
+  }
+  
+  for(int j = 0; j<26; j++){
+    if(letter_counts[j] == 0){
+      ch++;
+    }
+    else{
+      printf("%c: %d\n", ch, letter_counts[j]);
+      ch++;
+    }
+  }
+
   printf("finished foo\n");
   while(1);
 }
@@ -55,7 +119,7 @@ void _start() {
   // exec will handle invalid file names internally
   //exec(strtok(buf, " "), NULL);
   thread_t* bar = malloc(sizeof(thread_t));
-  create_thread(bar, "foo", foo, NULL);
+  create_thread(bar, "foo", foo, testFile);
   int c = 1;
   for (int i= 0; i < 2000000000; i++);
   /*while(1){if(!c%1000){printf("%d, %p\n",c, foo);}c++;}*/
