@@ -5,6 +5,7 @@
 #include <stddef.h>
 #include <stdbool.h>
 #include "../kernel/handler.h"
+#include "../kernel/thread.h"
 #include "../kernel/pic.h"
 
 // Given an address and the protections

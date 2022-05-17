@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../kernel/kprocess.h"
+#include "../kernel/thread.h"
 #include <string.h>
 
 // Given the descriptor for where to read, buffer to store input and size, read input
@@ -23,3 +24,5 @@ void perror(const char* str);
 
 // Given a formatted string, print accordingly
 void printf(const char* format, ...);
+
+extern void timer_interrupt();

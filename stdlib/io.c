@@ -1,10 +1,24 @@
 #include "io.h"
 
+
+extern void timer_interrupt();
+
+int syscall_counter = 0;
+
+void check_counter(){
+  if (++syscall_counter == 5000){
+    syscall_counter = 0;
+    timer_interrupt();
+  }
+}
+
 int read (int fd, char const *buf, int size){
+  check_counter();
   return syscall(SYS_read, fd, buf, size);
 }
 
 int write (int fd, const char *buf, int size){
+  check_counter();
   return syscall(SYS_write, fd, buf, size);
 }
 
@@ -13,6 +27,7 @@ size_t getline (char * buf, size_t sz, char * fd) {
 }
 
 void perror(const char* str) {
+  check_counter();
   syscall(SYS_write, 2, str, strlen(str));
 }
 

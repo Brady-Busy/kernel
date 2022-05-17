@@ -84,19 +84,25 @@ bool kexec(struct stivale2_module elf_file) {
     // }
 
 
-    // Call vm_map to map memory
-    if (!vm_map(root, virtual_add, false, true, false)) {
-      kprintf("vm_map failed\n");
-      return false;
+    // Call vm_map to map memory, we assume one more page to be mapped to avoid memory that
+    // occupies multiple pages
+    //kprintf("virtual_address at %p with memory size %d\n", virtual_add, program_hdr->p_memsz);
+    for (int j = 0; j < program_hdr->p_memsz + PAGE_SIZE ; j+= PAGE_SIZE){
+      if (!vm_map(root, (virtual_add & 0xFFFFFFFFFFFFF000) + j, false, true, false)) {
+        kprintf("vm_map failed\n");
+        return false;
+      }
     }
 
     // Copying the contents of the executable
     memcpy(virtual_add, elf_file.begin + program_hdr->p_offset, program_hdr->p_filesz);
 
     // update permissions to reflect input
-    if (!vm_protect(root, virtual_add, true, (flags & 2) >> 1, flags & 1)){
-     kprintf("vm_protect failed\n");
-     return false;
+    for (int j = 0; j < program_hdr->p_memsz + PAGE_SIZE; j+= PAGE_SIZE){
+      if (!vm_protect(root, (virtual_add & 0xFFFFFFFFFFFFF000) + j, true, (flags & 2) >> 1, flags & 1)){
+       kprintf("vm_protect failed\n");
+       return false;
+      }
     }
   }
   /*
@@ -112,11 +118,12 @@ bool kexec(struct stivale2_module elf_file) {
   }
   */
 
-  kprintf("before create_thread\n");
+  clean_threads();
+  //kprintf("before create_thread\n");
   // Create entry for shell
   thread_t * init_context = kmalloc(sizeof(thread_t));
   uint64_t user_stack = thread_create(init_context, elf_file.string, elf_hdr->e_entry, NULL);
-  kprintf("after create_thread, stack is %x\n", user_stack);
+  //kprintf("after create_thread, stack is %x\n", user_stack);
 
   // Unmask irq0 which is the timer interrupt
   //outb(PIC1_COMMAND, PIC_EOI);
@@ -181,13 +188,12 @@ int sys_exec (const char *program, const char *argv[]){
 
 // start shell program
 int sys_exit (int e_code){
-  /*switch (e_code){
+  switch (e_code){
     default: // reserved for exit code
       break;
   }
   kexec(*shell_module);
-  */
-  end_current();
+  //end_current();
   pic_unmask_irq(0);
   outb(PIC1_COMMAND, PIC_EOI);
   return 0;

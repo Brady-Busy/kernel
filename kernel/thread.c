@@ -10,7 +10,7 @@ void thread_init(){
 
 uint64_t thread_create(thread_t * memory, const char * name, uintptr_t func, void * args) {
     pic_mask_irq(0);
-    kprintf("thread_create called\n");
+    //kprintf("thread_create called\n");
     memory->func = func;
     memory->thread_id = global_thread.thread_num;
     memory->state = 0; // set to ready
@@ -45,7 +45,7 @@ void context_handler(context_switch_t* context){
     const char* n = (const char*)context->rsi;
     uintptr_t func = (uintptr_t) context->rdx;
     void* args = (void*)context->rcx;
-    kprintf("anything wrong?\n");
+    //kprintf("anything wrong?\n");
     
     thread_create(m, n, func, args);
     int id = m->thread_id;
@@ -59,7 +59,7 @@ void context_handler(context_switch_t* context){
     context->rax = id;
     //save m into the global struct
 
-    kprintf("after context handler\n");
+    //kprintf("after context handler\n");
     outb(PIC1_COMMAND, PIC_EOI);
     pic_unmask_irq(0);
 }
@@ -139,3 +139,9 @@ void end_current(){
     global_thread.lst[global_thread.current_running]->state = 1;
 }
 
+void clean_threads(){
+    thread_init();
+    for(int i = 0; i < 512; i++){
+        global_thread.lst[i] = NULL;
+    }
+}

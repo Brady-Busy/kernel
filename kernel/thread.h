@@ -105,3 +105,6 @@ extern void context_entry();
  * Returns: thread_id
 */
 void end_current();
+
+// calls to invoke a timer interrupt
+extern void timer_interrupt();
