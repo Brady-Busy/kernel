@@ -6,7 +6,7 @@ extern void timer_interrupt();
 int syscall_counter = 0;
 
 void check_counter(){
-  if (++syscall_counter == 5000){
+  if (++syscall_counter == 500){
     syscall_counter = 0;
     timer_interrupt();
   }
@@ -18,7 +18,6 @@ int read (int fd, char const *buf, int size){
 }
 
 int write (int fd, const char *buf, int size){
-  check_counter();
   return syscall(SYS_write, fd, buf, size);
 }
 
@@ -94,4 +93,5 @@ void printf(const char* format, ...) {
     }
   }
   va_end (args);
+  check_counter();
 }

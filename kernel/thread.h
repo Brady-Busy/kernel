@@ -106,5 +106,7 @@ extern void context_entry();
 */
 void end_current();
 
+void clean_threads();
+
 // calls to invoke a timer interrupt
 extern void timer_interrupt();

@@ -24,5 +24,3 @@ void perror(const char* str);
 
 // Given a formatted string, print accordingly
 void printf(const char* format, ...);
-
-extern void timer_interrupt();

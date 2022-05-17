@@ -32,8 +32,12 @@ void bar(char* xtr){
     for(int d = 0; d < 1000; d++);
   }
   
-  for (int i= 0; i < 2000000000; i++);
-
+  
+  for(int x = 0; x < strlen(xtr); x++){
+    if (xtr[x] >= 'A' && xtr[x] <= 'Z') {
+      letterBig++;
+    }
+  }
   printf("counted a total of %d upper-case letters\n", letterBig);
   printf("now breakdown\n");
   char ch = 'A';
