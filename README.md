@@ -23,10 +23,13 @@ Internally, multiple threads are created. This is represented as:
 * Upon entering a thread, "got to __threadname__" is printed
 * Finally, upon finishing the thread "finished __threadname__" is printed
 
-In our demo, the main thread is created first (see "we are in main"). Then, the foo thread is created and finished (this is followed by take, another thread that is created and finished). Finally, main finishes.
+We have two demo, to run the first one we type "hello" into the shell. This demo uses the system time interupt to switch between threads. In this demo, the main thread is created first (see "we are in main"). Then, the foo thread is created, the scheduler at some point switches to it and finished (this is followed by take, another thread that is created and finished). Finally, the scheduler switches back and main finishes.
 
 This represents multi-tasking as the main function is started first, but finished last and therefore the processor switched to work on the foo and take threads before switching back to main
 
+The second demo is called by typing "world" in the shell, it shows that the scheduler actually works although it is not being triggered by the system time interupt but by how many sys_calls the user has made.
+
+We have a general protection error that happens occasionally but re running using 'make run' re runs the kernel and will most likely not give the error.
 ## Acknowledgements
 The starter code is provided by professor Charlie Curtsinger, references for starter code is listed below.
 
