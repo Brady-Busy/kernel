@@ -8,38 +8,30 @@
 
 char change[] = "aaa";
 
-//char* testFile= "A sunny day, a cold day, not sure how the day's weather will turn out. It seems I can never be dressed right need to sleep need to get this demo to WORK AHHHHHH. Ok hopefully get reaal shit done";
-
-//l
 int letterSma = 0;
 int letterBig = 0;
 size_t letter_counts[26] = {0};
 size_t letter_countsB[26] = {0};
 
 void bar(char* xtr){
-  /*
-  int a = 1;
   printf("got to bar\n");
-  while(1){
-    /*
-    if (a % 1000 == 2){
-      printf("%d\n", a);
-    }
-    a++;
-    }*/
-  printf("got to bar\n");
-  for(int c = 0; c < 10; c++){
-    for(int d = 0; d < 1000; d++);
+
+  // Wait
+  for(int c = 0; c < 10000; c++){
   }
-  
-  
+
+  // Count number of capital letters
   for(int x = 0; x < strlen(xtr); x++){
     if (xtr[x] >= 'A' && xtr[x] <= 'Z') {
       letterBig++;
     }
   }
+
+  // Report capital letters
   printf("counted a total of %d upper-case letters\n", letterBig);
   printf("now breakdown\n");
+  
+  // Find number of each capital letter
   char ch = 'A';
   for (int x = 0; x < strlen(xtr); x++){
     if (xtr[x] >= 'A' && xtr[x] <= 'Z') {
@@ -47,6 +39,7 @@ void bar(char* xtr){
     }
   }
   
+  // Print out capital letters and frequency if they were found
   for(int j = 0; j<26; j++){
     if(letter_countsB[j] == 0){
       ch++;
@@ -56,39 +49,34 @@ void bar(char* xtr){
       ch++;
     }
   }
-  
-
   printf("\nfinished bar\n");
+
+  // Since we have "finished", stop here
   while(1);
-  exit(1);
-  
 }
 
 void foo(char* count){
   printf("got to foo\n");
-  /*
-  thread_t* tar = malloc(sizeof(thread_t));
-  create_thread(tar, "bar", bar, NULL);
-  int b = 1;
-  printf("got to foo\n");
-  while(1){/*if(b%1000 == 1){printf("%d\n",b);}b++;}*/
+
+  // Make space for and create a thread which will run bar
   thread_t* tar = malloc(sizeof(thread_t));
   create_thread(tar, "bar", bar, count);
-  
 
+  // Delay
+  for (int i= 0; i < 2000050000; i++);
 
-  for (int i= 0; i < 2000000000; i++);
-
-  for(int a = 0; a < 50; a++){
-    for(int b = 0; b < 1000; b++);
-  }
+  // Count number of lowercase letters
   for(int x = 0; x < strlen(count); x++){
     if (count[x] >= 'a' && count[x] <= 'z') {
       letterSma++;
     }
   }
+
+  // Report lowercase letters
   printf("counted a total of %d lower-case letters\n", letterSma);
   printf("now breakdown\n");
+
+  // Find number of each lowercase letter
   char ch = 'a';
   for (int x = 0; x < strlen(count); x++){
     if (count[x] >= 'a' && count[x] <= 'z') {
@@ -96,6 +84,7 @@ void foo(char* count){
     }
   }
   
+  // Print out lowercase letters and frequency if they were found
   for(int j = 0; j<26; j++){
     if(letter_counts[j] == 0){
       ch++;
@@ -107,38 +96,27 @@ void foo(char* count){
   }
 
   printf("\nfinished foo\n");
-  //exit(1);
   while(1);
 }
 
 void _start() {
-  //printf("$\n");
-  //char * buf = malloc(80);
-  //getline(buf, 80, 0);
-  // exec the specified file from the user
-  // exec will handle invalid file names internally
-  //exec(strtok(buf, " "), NULL);
   printf("we are in main\n");
   char * testFile2 = "A sunny day, a cold day, not sure how the day's weather will turn out.It seems I can never be dressed right need to sleep need to get this demo to WORK AHHHHHH. Ok hopefully get reaal shit done";
-  //printf("%d\n",strlen(testFile2)+1);
-  // char * test = malloc (strlen(testFile2)+1);
-  //strcpy(test, testFile);
   printf("Testing string is \"%s\"\n", testFile2);
   thread_t* bar = malloc(sizeof(thread_t));
   create_thread(bar, "foo", foo, testFile2);
-  int c = 1;
+
+  // Wait
   for (int i= 0; i < 2000000000; i++);
-  /*while(1){if(!c%1000){printf("%d, %p\n",c, foo);}c++;}*/
-  
+
+  // Wait with progress
   for(int i = 0; i < 500; i++){
     for(int j = 0; j < 100000; j++){
       if (j == 999&& i % 100 == 0){
-        printf("%d\n",i);
+        printf("Main at %d of 500\n",i);
       }
     }
   }
-    
   printf("finished main\n");
-  //while(1);
   exit(1);
 }

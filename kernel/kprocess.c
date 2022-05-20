@@ -40,53 +40,14 @@ bool kexec(struct stivale2_module elf_file) {
     uint32_t flags = program_hdr->p_flags;
 
     if (program_hdr->p_type != 1) continue;
-    //kprintf("0x%x\n", virtual_add);
 
     if (flags == 3 || flags == 7){
       kprintf("File permission denied (RWE or WE)\n");
       return false;
     }
 
-
-    // if(program_hdr->p_memsz > PAGESIZE){
-    //   int num = program_hdr->p_memsz / PAGESIZE;
-    //   if(program_hdr->p_memsz%PAGESIZE != 0) {
-    //       num += 1;
-    //   }
-    //   uint64_t start = program_hdr->p_vaddr;
-    //   uintptr_t cop = fileMod + program_hdr->p_offset;
-    //   size_t total = program_hdr->p_memsz;
-    //   for(int i = 0; i<num; i++){
-    //       vm_map(root, start, false, true, false);
-    //       size_t amount = PAGESIZE;
-    //       if(total >= amount){
-    //           memcpy(start, cop, amount);
-    //           total -= amount;
-    //       }
-    //       else{
-    //           memcpy(start, cop, total);
-    //       }
-    //       start += PAGESIZE;
-    //       cop += PAGESIZE;
-    //   } 
-    // }
-    // else{ // Otherwise file is less than a page size
-    //   bool mapcheck = vm_map(root, program_hdr->p_vaddr, false, true, false);
-    //   // if vm_map worked
-    //   if (mapcheck){
-    //       const uintptr_t* cop = fileMod + program_hdr->p_offset;
-    //       memcpy(program_hdr->p_vaddr, cop, program_hdr->p_memsz);
-    //       // Copy memory into the newly mapped page
-    //   }else{
-    //       kprintf("error error!! vm_map failed\n");
-    //   }
-        
-    // }
-
-
     // Call vm_map to map memory, we assume one more page to be mapped to avoid memory that
     // occupies multiple pages
-    //kprintf("virtual_address at %p with memory size %d\n", virtual_add, program_hdr->p_memsz);
     for (int j = 0; j < program_hdr->p_memsz + PAGE_SIZE ; j+= PAGE_SIZE){
       if (!vm_map(root, (virtual_add & 0xFFFFFFFFFFFFF000) + j, false, true, false)) {
         kprintf("vm_map failed\n");
@@ -105,28 +66,12 @@ bool kexec(struct stivale2_module elf_file) {
       }
     }
   }
-  /*
-  // Pick an arbitrary location and size for the user-mode stack
-  uintptr_t user_stack = 0x70000000000;
-
-  size_t user_stack_size = 8 * PAGE_SIZE;
-
-  // Map the user-mode-stack, somehow without <=, it will make page fault
-  for(uintptr_t p = user_stack; p <= user_stack + user_stack_size; p += 0x1000) {
-    // Map a page that is user-accessible, writable, but not executable
-    vm_map(read_cr3() & 0xFFFFFFFFFFFFF000, p, true, true, false);
-  }
-  */
 
   clean_threads();
-  //kprintf("before create_thread\n");
-  // Create entry for shell
+  // Create entry and thread for shell
   thread_t * init_context = kmalloc(sizeof(thread_t));
   uint64_t user_stack = thread_create(init_context, elf_file.string, elf_hdr->e_entry, NULL);
-  //kprintf("after create_thread, stack is %x\n", user_stack);
 
-  // Unmask irq0 which is the timer interrupt
-  //outb(PIC1_COMMAND, PIC_EOI);
   pic_mask_irq(0);
 
   //And now jump to the entry point
